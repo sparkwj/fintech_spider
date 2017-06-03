@@ -56,7 +56,7 @@ COOKIES_DEBUG = True
 DOWNLOADER_MIDDLEWARES = {
     # User-Agent
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'CNKI_Patent.middlewares.RotateUserAgentMiddleware': 540,   # NOTE: this value must be smaller(higher priority) than PhantomJS's priority valuea(JavaScriptMiddleware: 543), otherwise User-Agent will NOT work.
+    'CNKI_Patent.middlewares.RotateUserAgentMiddleware': 530,   # NOTE: this value must be smaller(higher priority) than PhantomJS's priority valuea(JavaScriptMiddleware: 543), otherwise User-Agent will NOT work.
 
     # Proxy
     # 'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110, # ScrapyDeprecationWarning
@@ -64,7 +64,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'CNKI_Patent.middlewares.ProxyMiddleware': 100,
 
     # PhantomJS
-    # 'CJOSpider.middlewares.JavaScriptMiddleware': 543,
+    'CNKI_Patent.middlewares.JavaScriptMiddleware': 543,
 }
 
 # Enable or disable extensions

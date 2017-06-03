@@ -5,8 +5,9 @@
 # Date: 5/26/17 4:06 PM
 
 # Supporting:
+# 0. PhantomJS/Selenium
 # 1. User-Agent
-# 2. IP Proxy(API: http://datazhiyuan.com:60001/plain)
+# 2. IP Proxy(Redis)
 
 
 from scrapy import cmdline

@@ -15,16 +15,9 @@ class Cookie:
     """
     获取或刷新cookie
     """
-    def __init__(self, config):
-        """
-        构造函数
-        """
-        self.config = config
+    def __init__(self):
         self.cookie = ""
-        # 列表页总页数
-        self.totalListPage = 0
-        # 初始化生存cookie
-        self.refresh()
+        self.refresh()  # 初始化生存cookie
 
     def refresh(self):
         """
@@ -32,42 +25,41 @@ class Cookie:
         """
         cookiejar = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+
         # Step 1: cookiejar记录ASP.NET_SessionId,LID,LID,SID_kns
         try:
             opener.open("http://epub.cnki.net/kns/brief/default_result.aspx")
         except:
-            print
-            "EXCEPTION(" + time.strftime("%Y-%m-%d %H:%M:%S") + "):刷新Cookie时发生异常，休息" + str(
-                self.config.get("urlopenExceptRetryInterval")) + "秒后重试"
-            time.sleep(self.config.get("urlopenExceptRetryInterval"))
+            print("Exception Step1")
+            time.sleep(120)
             opener.open("http://epub.cnki.net/kns/brief/default_result.aspx")
+
         # Step 2: 登录
         try:
             opener.open("http://epub.cnki.net/kns/Request/login.aspx?&td=" + str(int(time.time() * 1000)))
         except:
-            print
-            "EXCEPTION(" + time.strftime("%Y-%m-%d %H:%M:%S") + ")：刷新Cookie时发生异常，休息" + str(
-                self.config.get("urlopenExceptRetryInterval")) + "秒后重试"
-            time.sleep(self.config.get("urlopenExceptRetryInterval"))
+            print("Exception Step2")
+            time.sleep(120)
             opener.open("http://epub.cnki.net/kns/Request/login.aspx?&td=" + str(int(time.time() * 1000)))
+
         # Step 3: 设置搜索选项
         data = urllib.urlencode(self.config.get('search'))
-        self.config.set("Cookie", self.generateCookieString(cookiejar), "headers")
+        self.config.set("Cookie", self.generateCookieString(cookiejar), "headers")  # headers["Cookie"] = self.generateCookieString(cookiejar),
         headers = self.config.get("headers")
-        request = urllib2.Request("http://epub.cnki.net/KNS/request/SearchHandler.ashx", data, headers)
+        request = urllib2.Request("http://epub.cnki.net/KNS/request/SearchHandler.ashx", data, headers) # POST
         try:
             opener.open(request)
         except:
-            print
-            "EXCEPTION(" + time.strftime("%Y-%m-%d %H:%M:%S") + ")：刷新Cookie时发生异常，休息" + str(
-                self.config.get("urlopenExceptRetryInterval")) + "秒后重试"
-            time.sleep(self.config.get("urlopenExceptRetryInterval"))
+            print("Exception Step3")
+            time.sleep(120)
             opener.open(request)
+
         additional = {
             "RsPerPage": self.config.get("RecordsPerPage", "list"),
             "cnkiUserKey": self.generateCnkiUserKey()
         }
         self.cookie = self.generateCookieString(cookiejar, additional)
+
         # Step 4:请求列表页第1页，设置检索参数
         data = urllib.urlencode(self.config.get('listPageOne'))
         self.config.set("Cookie", self.cookie, "headers")
@@ -76,11 +68,11 @@ class Cookie:
         try:
             response = opener.open(request)
         except:
-            print
-            "EXCEPTION(" + time.strftime("%Y-%m-%d %H:%M:%S") + ")：刷新Cookie时发生异常，休息" + str(
-                self.config.get("urlopenExceptRetryInterval")) + "秒后重试"
-            time.sleep(self.config.get("urlopenExceptRetryInterval"))
+            print("Exception Step3")
+            time.sleep(120)
             response = opener.open(request)
+
+        """
         # 获取总页数
         soup = BeautifulSoup(response.read())
         if soup.find('span', {"class": "countPageMark"}):
@@ -88,19 +80,11 @@ class Cookie:
             s = s.split("/")
             if len(s) >= 2:
                 self.totalListPage = int(s[1])
+        """
         return self.cookie
 
     def get(self):
-        """
-        获取已经存储的cookie
-        """
         return self.cookie
-
-    def getTotalListPage(self):
-        """
-        获取列表页总页数
-        """
-        return self.totalListPage
 
     def generateCnkiUserKey(self):
         """

@@ -8,6 +8,10 @@
 import random
 from scrapy import signals
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from selenium import webdriver
+from scrapy.http import HtmlResponse
+import time
+from selenium.webdriver.common.proxy import ProxyType
 from Spiders.CJOSpider.get_proxy import get_proxy
 
 
@@ -54,59 +58,53 @@ class RotateUserAgentMiddleware(UserAgentMiddleware):
     ]
 
 
-"""
 class JavaScriptMiddleware(object):
     def process_request(self, request, spider):
         # print("PhantomJS is starting...")
         # driver = webdriver.PhantomJS(r"/home/lxw/Downloads/phantomjs/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")   # OK
-        driver = webdriver.Chrome(r"/home/lxw/Software/chromedirver_selenium/chromedriver") # OK
+        driver = webdriver.Chrome(r"/home/lxw/Software/chromedirver_selenium/chromedriver")   # OK
 
-        "" "
+
+        # Chrome/PhantomJS 增加代理, 下面的都适用
         # Using IP Proxies:
         # 打开两次chrome？那第一次chrome会暴露IP吗？应该没事儿，没有访问特定的网站
         # 利用DesiredCapabilities(代理设置)参数值，重新打开一个sessionId，我看意思就相当于浏览器清空缓存后，加上代理重新访问一次url
         proxy = webdriver.Proxy()
         proxy.proxy_type = ProxyType.MANUAL
-        req = requests.get("http://datazhiyuan.com:60001/plain", timeout=10)
-        print("Get an IP proxy:", req.text)
-
-        if req.text:
-            proxy.http_proxy = req.text  # "1.9.171.51:800"
+        proxy.http_proxy = get_proxy()    # "1.9.171.51:800"
         # 将代理设置添加到webdriver.DesiredCapabilities.PHANTOMJS中
         proxy.add_to_capabilities(webdriver.DesiredCapabilities.PHANTOMJS)
         driver.start_session(webdriver.DesiredCapabilities.PHANTOMJS)
-        "" "
 
-        driver.get(request.url) # 京东的商品详情页面太慢了, 改用http://roll.news.qq.com/页面
+        driver.get(request.url)    # 京东的商品详情页面太慢了, 改用http://roll.news.qq.com/页面
         time.sleep(2)
-        js = "var q=document.documentElement.scrollTop=10000"
-        driver.execute_script(js)   # 可执行js，模仿用户操作。此处为将页面拉至最底端。
-        time.sleep(3)
+        # js = "var q=document.documentElement.scrollTop=10000"
+        # driver.execute_script(js)   # 可执行js，模仿用户操作。此处为将页面拉至最底端。
+        # time.sleep(3)
         body = driver.page_source
         print("访问" + request.url)
         return HtmlResponse(driver.current_url, body=body, encoding='utf-8', request=request)
+
 """
-
-
 class ProxyMiddleware(object):
-    """
+    "" "
     如果不使用Selenium/PhantomJS，那么Scrapy中使用代理可以这样用
     但如果使用Selenium/PhantomJS，并且想让代理在Selenium/PhantomJS中生效则不能这样用(这样用，即使在settings.py中ProxyMiddleware具有比JavaScriptMiddleware高的优先级，代理依然无法在Selenium/PhantomJS中生效)
-    """
+    "" "
     # overwrite process request
     def process_request(self, request, spider):
         try:
             proxy = get_proxy()
             if proxy:
                 request.meta['proxy'] = "http://" + proxy   # "http://" is essential here.
-                request.meta['download_timeout'] = 180.0
-                request.meta['retry_times'] = 3
+                request.meta['download_timeout'] = 120.0
+                request.meta['retry_times'] = 2
             else:
                 print("in ProxyMiddleware.process_request(): no proxy available")
         except Exception as e:
             print("lxw_Exception", e)
             return
-
+"""
 
 
 class CnkiPatentSpiderMiddleware(object):

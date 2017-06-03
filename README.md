@@ -37,8 +37,9 @@ The data crawled by "**fintech_spider**" has been used by [嗅金牛](http://xiu
 
 **[Xiaowei Liu](https://github.com/lxw0109)**:
 + **CJOSpider**
- 0. [NO, 按理说只用CJOSpider.py然后重新运行就可以] 增加对Redis中TASKS_HASH没有爬取结束任务的爬取代码(一定小于CONCURRENT_REQUESTS个?)
- 1. [NO, 按理说只用CJODocIDSpider.py然后重新运行就可以] 增加对Redis中DOC_ID_HASH没有爬取结束任务的爬取代码
+ 0. 【比rpush可能会稍微好一点儿，这个暂时不改了，感觉怎么改都会有问题】proxy的获取策略改成lpop() + insert(第六个位置)，而不是lpop() + rpush()
+ 1. [NO, 按理说只用CJOSpider.py然后重新运行就可以] 增加对Redis中TASKS_HASH没有爬取结束任务的爬取代码(一定小于CONCURRENT_REQUESTS个?)
+ 2. [NO, 按理说只用CJODocIDSpider.py然后重新运行就可以] 增加对Redis中DOC_ID_HASH没有爬取结束任务的爬取代码
 
 + **NECIPSSpider**
  0. add Referer to NECIPSpider_wo_scrapy.py
