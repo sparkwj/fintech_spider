@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
-# File: test.py
+# File: cnki_patent.py
 # Author: lxw
 # Date: 5/26/17 4:03 PM
 
