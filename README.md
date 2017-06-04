@@ -8,12 +8,13 @@ The data crawled by "**FinTech Spider**" has been used by [嗅金牛](http://xiu
 
 ### Structrue of "FinTech Spider"
 _Only important dirs & files are listed here._
+
 | Directory/File | Author | Usage |
 |------|:------:|------|
 | Anti_Anti_Spider/ | [hee](https://github.com/hee0624) |  |
 | | |
 | Demo/ |  | Some Demonstrations(e.g. PhantomJS/Proxies, etc.) |
-| Demo/ArticleSpider/ | [lxw](https://github.com/lxw0109) |  |
+| Demo/ArticleSpider/ | [hee](https://github.com/hee0624) |  |
 | Demo/geetestcrack.py | [hee](https://github.com/hee0624) |  |
 | Demo/phantomjs_proxy.py | [lxw](https://github.com/lxw0109) | Add IP proxy in PhantomJS |
 | Demo/user_agent.txt | [hee](https://github.com/hee0624) | A large number of User-Agents |
