@@ -11,18 +11,19 @@ _Only important dirs & files are listed here._
 
 | Directory/File | Author | Usage |
 |------|:------:|------|
-| Anti_Anti_Spider/ | [hee](https://github.com/hee0624) |  |
+| **README.md** | [lxw](https://github.com/lxw0109) | The document for this project |
 | | |
-| Demo/ |  | Some Demonstrations(e.g. PhantomJS/Proxies, etc.) |
+| **Anti_Anti_Spider/** | [hee](https://github.com/hee0624) |  |
+| | |
+| **Demo/** |  | Some Demonstrations(e.g. PhantomJS/Proxies, etc.) |
 | Demo/ArticleSpider/ | [hee](https://github.com/hee0624) |  |
 | Demo/geetestcrack.py | [hee](https://github.com/hee0624) |  |
 | Demo/phantomjs_proxy.py | [lxw](https://github.com/lxw0109) | Add IP proxy in PhantomJS |
 | Demo/user_agent.txt | [hee](https://github.com/hee0624) | A large number of User-Agents |
 | | |
-| README.md | [lxw](https://github.com/lxw0109) | The document for this project |
-| | |
-| Spiders/ |  | The Spiders directory stores Python scripts that crawl data we need from the Internet) |
-| Spiders/CJOSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data from [中国裁判文书网](http://wenshu.court.gov.cn/)(China Judgements Online) |
+| **Spiders/** |  | The Spiders directory stores Python scripts that crawl data we need from the Internet) |
+| Spiders/CJODocIDSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data(case details) from [中国裁判文书网](http://wenshu.court.gov.cn/)(China Judgements Online) |
+| Spiders/CJOSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data(basic info) from [中国裁判文书网](http://wenshu.court.gov.cn/)(China Judgements Online) |
 | Spiders/CninfoSpider/ | [hee](https://github.com/hee0624) | Spiders for crawling data from [巨潮资讯](http://www.cninfo.com.cn/cninfo-new/information/companylist) |
 | Spiders/CNKI_Patent/ | [lxw](https://github.com/lxw0109) | Spiders for crawling the patent data from [中国知网](http://kns.cnki.net/kns/brief/default_result.aspx) |
 | Spiders/NECIPSSpider/ | [lxw](https://github.com/lxw0109) | Spiders for crawling data from [国家企业信用信息公示系统](http://www.gsxt.gov.cn/corp-query-homepage.html)(National Enterprise Credit Information Publicity System) |
