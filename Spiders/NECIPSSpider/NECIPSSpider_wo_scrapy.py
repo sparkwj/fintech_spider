@@ -15,8 +15,7 @@ from PIL import Image
 import uuid
 from io import BytesIO
 
-from Spiders.public_utils import user_agent_list
-from Spiders.public_utils import get_proxy
+from Spiders.CJOSpider.CJOSpider.middlewares import RotateUserAgentMiddleware
 
 """
 Supporting:
@@ -41,7 +40,7 @@ def get_driver_phantomjs():
     dcap = dict(DesiredCapabilities.PHANTOMJS)
 
     # Setting User-Agent
-    ua = random.choice(user_agent_list)
+    ua = random.choice(RotateUserAgentMiddleware.user_agent_list)
     if ua:
         print("Current User-Agent is:", ua)
         dcap["phantomjs.page.settings.userAgent"] = ua
@@ -80,7 +79,7 @@ def get_driver_chrome():
     options = webdriver.ChromeOptions()
 
     # Setting User-Agent
-    ua = random.choice(user_agent_list)
+    ua = random.choice(RotateUserAgentMiddleware.user_agent_list)
     if ua:
         print("Current User-Agent is:", ua)
         options.add_argument("--user-agent=" + ua)

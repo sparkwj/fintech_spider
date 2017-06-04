@@ -10,12 +10,8 @@ import random
 import requests
 from requests import Request, Session
 
-from Spiders.public_utils import check_proxy_alive
-# from Spiders.public_utils import get_proxy
-from Spiders.public_utils import get_proxy_xcdl
-from Spiders.public_utils import get_proxy_xcdl_localfile
-from Spiders.public_utils import user_agent_list
-from Spiders.public_utils import get_proxy_dxdl
+from Spiders.CJOSpider.utils import check_proxy_alive
+from Spiders.CJOSpider.CJOSpider.middlewares import RotateUserAgentMiddleware
 
 
 class CJOSpider():
@@ -43,7 +39,7 @@ class CJOSpider():
         try:
             # response = requests.post(url=url, data=data)
             headers = {"Host": "wenshu.court.gov.cn", "Referer": "http://wenshu.court.gov.cn/List/List"}
-            ua = random.choice(user_agent_list)
+            ua = random.choice(RotateUserAgentMiddleware.user_agent_list)
             if ua:
                 headers["User-Agent"] = ua
 
@@ -128,7 +124,7 @@ class CJOSpider():
     def get_detail(self, doc_id):
         url = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=" + doc_id
         headers = {"Host": "wenshu.court.gov.cn", "Referer": url}
-        ua = random.choice(user_agent_list)
+        ua = random.choice(RotateUserAgentMiddleware.user_agent_list)
         if ua:
             headers["User-Agent"] = ua
         try:
