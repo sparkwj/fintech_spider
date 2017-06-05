@@ -5,7 +5,7 @@
 # Date: 5/26/17 4:06 PM
 
 # Supporting:
-# 0. PhantomJS/Selenium
+# 0. PhantomJS/Selenium # 默认不使用PhantomJS, 注释掉了, 如果使用需要在middlewares中让注释掉的内容生效, 并且禁用ProxyMiddleware(Selenium使用代理的方式与不使用Selenium不一样)
 # 1. User-Agent
 # 2. IP Proxy(Redis)
 

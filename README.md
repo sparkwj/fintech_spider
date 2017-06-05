@@ -17,6 +17,7 @@ _Only important dirs & files are listed here._
 | | |
 | **Demo/** |  | Some Demonstrations(e.g. PhantomJS/Proxies, etc.) |
 | Demo/ArticleSpider/ | [hee](https://github.com/hee0624) |  |
+| Demo/CNKI_Patent/ | [lxw](https://github.com/lxw0109) | A demo for Scrapy spiders project which supports Selenium/PhantomJS/User-Agent/IP-Proxy |
 | Demo/geetestcrack.py | [hee](https://github.com/hee0624) |  |
 | Demo/phantomjs_proxy.py | [lxw](https://github.com/lxw0109) | Add IP proxy in PhantomJS |
 | Demo/user_agent.txt | [hee](https://github.com/hee0624) | A large number of User-Agents |
@@ -25,9 +26,9 @@ _Only important dirs & files are listed here._
 | Spiders/CJODocIDSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data(case details) from [中国裁判文书网](http://wenshu.court.gov.cn/)(China Judgements Online) |
 | Spiders/CJOSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data(basic info) from [中国裁判文书网](http://wenshu.court.gov.cn/)(China Judgements Online) |
 | Spiders/CninfoSpider/ | [hee](https://github.com/hee0624) | Spiders for crawling data from [巨潮资讯](http://www.cninfo.com.cn/cninfo-new/information/companylist) |
-| Spiders/CNKI_Patent/ | [lxw](https://github.com/lxw0109) | Spiders for crawling the patent data from [中国知网](http://kns.cnki.net/kns/brief/default_result.aspx) |
-| Spiders/NECIPSSpider/ | [lxw](https://github.com/lxw0109) | Spiders for crawling data from [国家企业信用信息公示系统](http://www.gsxt.gov.cn/corp-query-homepage.html)(National Enterprise Credit Information Publicity System) |
-| Spiders/new_three_board/ | [lxw](https://github.com/lxw0109) | Spiders for crawling data from [全国中小企业股份转让系统](http://www.neeq.com.cn/nq/listedcompany.html) |
+| Spiders/CNKI_Patent_Spider/ | [lxw](https://github.com/lxw0109) | (w/o scrapy)Spiders for crawling patent data from [中国知网](http://cnki.net/) |
+| Spiders/NECIPSSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data from [国家企业信用信息公示系统](http://www.gsxt.gov.cn/corp-query-homepage.html)(National Enterprise Credit Information Publicity System) |
+| Spiders/new_three_board/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data from [全国中小企业股份转让系统](http://www.neeq.com.cn/nq/listedcompany.html) |
 | Spiders/SBJSpider/ | [hee](https://github.com/hee0624) |  |
 
 

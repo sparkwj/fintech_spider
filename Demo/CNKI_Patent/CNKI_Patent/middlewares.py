@@ -57,7 +57,7 @@ class RotateUserAgentMiddleware(UserAgentMiddleware):
         "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
     ]
 
-
+"""
 class JavaScriptMiddleware(object):
     def process_request(self, request, spider):
         # print("PhantomJS is starting...")
@@ -84,27 +84,27 @@ class JavaScriptMiddleware(object):
         body = driver.page_source
         print("访问" + request.url)
         return HtmlResponse(driver.current_url, body=body, encoding='utf-8', request=request)
-
 """
+
+
 class ProxyMiddleware(object):
-    "" "
+    """
     如果不使用Selenium/PhantomJS，那么Scrapy中使用代理可以这样用
     但如果使用Selenium/PhantomJS，并且想让代理在Selenium/PhantomJS中生效则不能这样用(这样用，即使在settings.py中ProxyMiddleware具有比JavaScriptMiddleware高的优先级，代理依然无法在Selenium/PhantomJS中生效)
-    "" "
+    """
     # overwrite process request
     def process_request(self, request, spider):
         try:
             proxy = get_proxy()
             if proxy:
                 request.meta['proxy'] = "http://" + proxy   # "http://" is essential here.
-                request.meta['download_timeout'] = 120.0
+                request.meta['download_timeout'] = 60.0
                 request.meta['retry_times'] = 2
             else:
                 print("in ProxyMiddleware.process_request(): no proxy available")
         except Exception as e:
             print("lxw_Exception", e)
             return
-"""
 
 
 class CnkiPatentSpiderMiddleware(object):
