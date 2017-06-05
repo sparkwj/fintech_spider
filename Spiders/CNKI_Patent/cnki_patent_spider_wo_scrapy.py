@@ -15,7 +15,7 @@ from Spiders.CNKI_Patent.get_proxy import get_proxy
 """
 这种方法没有做出来，主要的问题：
 1. 使用cookie伪造，只保留"Cookie": 'ASP.NET_SessionId=zo3yryqlt55ktqni20qac0od; SID_kns=123112; RsPerPage=50;'三个字段即可， 但存在过期的问题
-是否能查到需要的数据（随着url切换数据切换）还没有进一步测试
+是否能查到需要的数据(随着url切换数据切换)还没有进一步测试
 2. 通过网上的获取cookie的方法总是无法请求成功，提示没有找到用户
 """
 
@@ -55,7 +55,11 @@ class CNKIPatentSpider:
         return driver
 
     def get_cookie(self):
+        company_name = "百度在线网络技术"
+        # company_name = "中国工商银行"
         driver = self.get_driver_chrome()
+        """
+        # 这个url请求可以缺省
         driver.get("http://kns.cnki.net/kns/brief/default_result.aspx")
         cookie_list = driver.get_cookies()
         print(type(cookie_list), cookie_list)
@@ -64,8 +68,34 @@ class CNKIPatentSpider:
             cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
         cookie_str = " ".join(cookie_str_list)
         print("Cookie str:", cookie_str)
+        """
+
+        # 这个url请求不可缺少, 否则会出现"对不起，服务器上不存在此用户！可能已经被剔除或参数错误"
+        time_str = time.strftime("%c", time.localtime())
+        time_list = time_str.split()  # ['Mon', 'Jun', '5', '10:29:33', '2017']
+        time_param = "{0} {1} {2:02} {3} {4} GMT+0800 (CST)".format(time_list[0], time_list[1], int(time_list[2]), time_list[4], time_list[3])
+        url = "http://kns.cnki.net/kns/request/SearchHandler.ashx?action=&NaviCode=*&ua=1.11&PageName=ASP.brief_default_result_aspx&DbPrefix=SCOD&DbCatalog=中国学术文献网络出版总库&ConfigFile=SCDBINDEX.xml&db_opt=SCOD&txt_1_sel=SQR$=|&txt_1_value1={0}&txt_1_special1=%&his=0&parentdb=SCDB&__={1}".format(company_name, time_param)
+        driver.get(url)
+        cookie_list = driver.get_cookies()
+        print(type(cookie_list), cookie_list)
+        cookie_str_list = []
+        for cookie_dict in cookie_list:
+            cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
+        cookie_str = " ".join(cookie_str_list)
+        print("Cookie str:", cookie_str)
+
+        url = "http://kns.cnki.net/kns/brief/brief.aspx?pagename=ASP.brief_default_result_aspx&dbPrefix=SCOD&dbCatalog=中国学术文献网络出版总库&ConfigFile=SCDBINDEX.xml&research=off&t={0}&keyValue={1}&S=1&queryid=11&skuakuid=11&turnpage=1&recordsperpage=50".format(int(time.time() * 1000), company_name)  # OK
+        driver.get(url)
+        cookie_list = driver.get_cookies()
+        print(type(cookie_list), cookie_list)
+        cookie_str_list = []
+        for cookie_dict in cookie_list:
+            cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
+        cookie_str = " ".join(cookie_str_list)
+        print("Cookie str:", cookie_str)
+        print(driver.page_source)
         driver.quit()
-        return cookie_str
+        return
 
         post_data = {
             "txt_1_sel": "SQR$%=|",
@@ -143,5 +173,5 @@ class CNKIPatentSpider:
 
 if __name__ == "__main__":
     spider = CNKIPatentSpider()
-    spider.crawl()
-    # spider.get_cookie()
+    # spider.crawl()
+    spider.get_cookie()
