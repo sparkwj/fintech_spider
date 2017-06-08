@@ -34,8 +34,9 @@ class CNKIPatentSpider:
     }
     proxies = {}
     TIMEOUT = 60
-    COMPLETE_TIMEOUT = 150    # 如果超过COMPLETE_TIMEOUT, 则认为当前的quadruple已经执行完了(要么执行成功,要么执行失败)
-    file_prefix = "/home/lxw/Documents/ISCAS/CNKI_Patent/"
+    # file_prefix = "/home/lxw/Documents/ISCAS/CNKI_Patent/"
+    file_prefix = "/home/hee/ISCAS/CNKI_Patent/"
+
     redis_client = RedisClient()
     redis_uri = redis_client.get_redis_uri()
     redis_key = RedisClient.get_redis_key_name()
@@ -47,7 +48,7 @@ class CNKIPatentSpider:
     # 9家公司(9=7+2) 7 + 2 * 2 = 11
     # code_abbr_full_dict = {'300104': ('乐视网', '乐视网信息技术(北京)股份有限公司'), '601519': ('大智慧', '上海大智慧股份有限公司'), '300040': ('九洲电气', '哈尔滨九洲电气股份有限公司'), '600021': ('上海电力', '上海电力股份有限公司'), '002654': ('万润科技', '深圳万润科技股份有限公司'), '600662': ('强生控股', '上海强生控股股份有限公司'), '300223': ('北京君正', '北京君正集成电路股份有限公司'), '000022': ('深赤湾', '深圳赤湾港航股份有限公司'), '900939': ('汇丽股份', '上海汇丽建材股份有限公司')}
 
-    code_abbr_full_dict = {'300104': ('乐视网', '乐视网信息技术(北京)股份有限公司'), '000022': ('深赤湾', '深圳赤湾港航股份有限公司')}
+    code_abbr_full_dict = {'666666': ('中国互联网络信息中心', '中国互联网络信息中心')}
 
     def get_driver_chrome(self):
         options = webdriver.ChromeOptions()
@@ -121,7 +122,6 @@ class CNKIPatentSpider:
             url = "http://kns.cnki.net/kns/request/SearchHandler.ashx?action=&NaviCode=*&ua=1.21&PageName=ASP.brief_result_aspx&DbPrefix=SCPD&DbCatalog=中国专利数据库&ConfigFile=SCPD.xml&db_opt=SCPD&db_value=中国专利数据库&txt_1_sel=SQR&txt_1_value1={0}&txt_1_relation=#CNKI_AND&txt_1_special1=%&his=0&__={1}".format(company_name, time_param)    # 中国专利
 
             proxy = get_proxy()
-            # proxy = "1"
             if proxy:
                 self.proxies["http"] = proxy
                 self.proxies["https"] = proxy
@@ -134,7 +134,7 @@ class CNKIPatentSpider:
                 self.error_logger.error("No Proxy Available.")
                 raise Exception()
         except Exception as e:
-            self.error_logger.error("lxw_Exception. in get_cookie_by_requests(): {0}".format(e))
+            self.error_logger.error("lxw_Exception. company_name: {0}. in get_cookie_by_requests(): {1}\n{2}\n".format(company_name, e, "---"*20))
             return ""
         else:
             return self.gen_cookie(dict(resp.cookies))
@@ -149,26 +149,43 @@ class CNKIPatentSpider:
     def crawl(self, company_code, company_name, url, abbr_or_full):
         """
         :param company_code: 
-        :param company_name: company_abbr / company_full 
+        :param company_name: 公司名称的简称或全称
         :param url:
-        :param abbr_or_full: "abbr" or "full"
+        :param abbr_or_full: "abbr" or "full", 标识使用的是公司简称还是公司全称
         :return: 
         
         NOTE: 1. self.headers["Cookie"]必须要设置, 否则就会提示"对不起，服务器上不存在此用户！可能已经被剔除或参数错误"
               2. 无论url怎么设置都无所谓, 完全按照self.headers["Cookie"]的值返回结果
         """
         quadruple = "{0}||{1}||{2}||{3}".format(company_code, company_name, url, abbr_or_full)
-        # TODO: 调试看看下面的语句执行后,Redis是否是更新,而不是增加(编码问题)
-        self.redis_client.into_redis(quadruple, repr(int(time.time())))   # 一进来这里就把quadruple在redis中对应的值给修改了. 表示当前quadruple正在被执行.
+
         # self.headers["Cookie"] = self.get_cookie_by_selenium()
         self.headers["Cookie"] = self.get_cookie_by_requests(company_name)
         if self.headers["Cookie"] == "":
-            self.error_logger.error("{0} get_cookie error.".format(company_name))
-            self.redis_client.into_redis(quadruple, "0")    # 下次self.operate()循环的时候让其立即执行
-            return
+            return    # 本次执行失败, 下次再执行(没有得到Cookie)
         else:
             try:
-                # print(self.headers["Cookie"])
+                """
+                url = "http://kns.cnki.net/kns/detail/detail.aspx?QueryID=0&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106506563A"
+                req = Request("GET", url=url, headers=self.headers)
+                print("headers(Cookie):", self.headers)
+                prepped = self.s.prepare_request(req)
+                # resp = self.s.send(prepped, proxies=self.proxies, timeout=self.TIMEOUT)
+                resp = self.s.send(prepped, timeout=self.TIMEOUT)
+                content = resp.text.strip()
+                with open("/home/lxw/Desktop/1.html", "w") as f:
+                    f.write(content)
+
+                url = "http://kns.cnki.net/kns/detail/detail.aspx?QueryID=13&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106503084A"
+                req = Request("GET", url=url, headers=self.headers)
+                print("headers(Cookie):", self.headers)
+                prepped = self.s.prepare_request(req)
+                # resp = self.s.send(prepped, proxies=self.proxies, timeout=self.TIMEOUT)
+                resp = self.s.send(prepped, timeout=self.TIMEOUT)
+                content = resp.text.strip()
+                with open("/home/lxw/Desktop/2.html", "w") as f:
+                    f.write(content)
+                """
                 timestamp = int(time.time() * 1000)    # url中的timestamp其实没有必要, 完全通过cookie中的值得到查询结果
                 # url = "http://kns.cnki.net/kns/brief/brief.aspx?pagename=ASP.brief_default_result_aspx&dbPrefix=SCOD&dbCatalog=%E4%B8%AD%E5%9B%BD%E5%AD%A6%E6%9C%AF%E6%96%87%E7%8C%AE%E7%BD%91%E7%BB%9C%E5%87%BA%E7%89%88%E6%80%BB%E5%BA%93&ConfigFile=SCDBINDEX.xml&research=off&t={0}&keyValue=%E4%B8%AD%E5%9B%BD%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C&S=1&queryid=11&skuakuid=11&turnpage=1&recordsperpage=50".format(timestamp)    # OK    # 就是curernt_time, 不是增加20分钟
                 # url = "http://kns.cnki.net/kns/brief/brief.aspx"    # NO.  NOTE: 与url中具体的参数无关, 但必须有这些参数
@@ -179,37 +196,73 @@ class CNKIPatentSpider:
                 # url = "http://kns.cnki.net/kns/brief/brief.aspx?RecordsPerPage=50&pagename=ASP.brief_result_aspx&dbPrefix=SCOD&dbCatalog=专利数据总库&ConfigFile=SCOD.xml&research=off&t={0}&keyValue={1}&S=1".format(timestamp, company_name)  # 中国专利 + 国际专利
                 # url = "http://kns.cnki.net/kns/brief/brief.aspx?RecordsPerPage=50&pagename=ASP.brief_result_aspx&dbPrefix=SCPD&dbCatalog=中国专利数据库&ConfigFile=SCPD.xml&research=off&t={0}&keyValue={1}&S=1".format(timestamp, company_name)  # 中国专利
                 # curpage=2 不好使
-                if url == "":   # 初始页(第一页)
-                    page_no = "1"
-                    url = "http://kns.cnki.net/kns/brief/brief.aspx?RecordsPerPage=50&pagename=ASP.brief_result_aspx&dbPrefix=SCPD&dbCatalog=中国专利数据库&ConfigFile=SCPD.xml&research=off&t={0}&keyValue={1}&S=1".format(timestamp, company_name)  # 中国专利
-                else:    # 非初始页
-                    page_no = self.get_page_no(url)
-                    if not page_no:
-                        self.redis_client.into_redis(, repr(int(time.time())))
-                        return    # page_no没有得到, url有问题. TODO: 修改redis, 把当前请求结束掉
+                if url.startswith("+"):    # 检索页
+                    url = url[1:]
+                    if url == "":   # 检索页的初始页(当前公司的第一页)
+                        page_no = "1"
+                        url = "http://kns.cnki.net/kns/brief/brief.aspx?RecordsPerPage=50&pagename=ASP.brief_result_aspx&dbPrefix=SCPD&dbCatalog=中国专利数据库&ConfigFile=SCPD.xml&research=off&t={0}&keyValue={1}&S=1".format(timestamp, company_name)  # 中国专利
+                    else:    # 检索页的非初始页
+                        page_no = self.get_page_no(url)
+                        if not page_no:
+                            # page_no没有得到, url有问题
+                            # 本次执行失败, 下次再执行也同样会失败, 结束该quadruple
+                            self.redis_client.into_redis(quadruple, "-2")
+                            return
+                        else:
+                            if not url.startswith("http"):
+                                url = "http://kns.cnki.net/kns/brief/brief.aspx" + url
+                    req = Request("GET", url=url, headers=self.headers)
+                    print("headers(Cookie):", self.headers)
+                    prepped = self.s.prepare_request(req)
+                    # TODO: 这里连proxies也可以不用, 但是否会封我们的IP?  先不用看是否会被封(先不用代理), 如果被封了再加上代理, 感觉应该不会被封, 应该是按照Cookie去反爬的, Cookie中携带着IP信息(如果IP自动登录了, 那么Cookie里只有登录后的信息(无IP信息, 但登录信息其实就相当于IP信息了);如果IP没有自动登录, 那么Cookie里有IP的信息)
+                    # resp = self.s.send(prepped, proxies=self.proxies, timeout=self.TIMEOUT)
+                    resp = self.s.send(prepped, timeout=self.TIMEOUT)
+                    content = resp.text.strip()
+
+                    # 所有详情信息入Redis
+                    details_urls = self.get_details_urls(content)
+                    for detail_url in details_urls:
+                        detail_quadruple = "{0}||{1}||-{2}||{3}".format(company_code, company_name, detail_url, abbr_or_full)
+                        self.redis_client.into_redis(detail_quadruple, "0")  # detail_quadruple入Redis
+
+                    # 下一页请求 入Redis
+                    next_page_link = self.get_next_page(content)
+                    if next_page_link == "":
+                        # 有异常: 下一页的可能得不到,但当前页的源码是要存起来的
+                        self.into_file(self.file_prefix + company_code + "/", page_no, content)
+                    elif next_page_link == "complete":
+                        self.into_file(self.file_prefix + company_code + "/", page_no, content)
+                    elif next_page_link == "no_result":
+                        # 当前页没有查到专利数据, 无需写入文件(更没有下一页之说了)
+                        pass
+                    else:
+                        self.into_file(self.file_prefix + company_code + "/", page_no, content)
+                        next_quadruple = "{0}||{1}||+{2}||{3}".format(company_code, company_name, next_page_link, abbr_or_full)
+                        self.redis_client.into_redis(next_quadruple, "0")    # next_quadruple入Redis
+
+                    self.redis_client.into_redis(quadruple, "-1")  # 当前请求成功, 修改redis中的标志位
+                else:    # 详情页. startswith("-")
+                    url = url[1:]   # /kns/detail/detail.aspx?QueryID=13&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106503084A
+                    patent_no = self.get_patent_no(url)    # 看当前专利是在查询结果中的第几条
+                    if not patent_no:
+                        # patent_no没有得到, url有问题
+                        # 本次执行失败, 下次再执行也同样会失败, 结束该quadruple
+                        self.redis_client.into_redis(quadruple, "-2")
+                        return
                     else:
                         if not url.startswith("http"):
-                            url = "http://kns.cnki.net/kns/brief/brief.aspx" + url
-                req = Request("GET", url=url, headers=self.headers)
-                prepped = self.s.prepare_request(req)
-                # TODO: 这里连proxies也可以不用, 但是否会封我们的IP?  先不用看是否会被封(先不用代理), 如果被封了再加上代理, 感觉应该不会被封, 应该是按照Cookie去反爬的, Cookie中携带着IP信息(如果IP自动登录了, 那么Cookie里只有登录后的信息(无IP信息, 但登录信息其实就相当于IP信息了);如果IP没有自动登录, 那Cookie里有IP的信息)
-                # resp = self.s.send(prepped, proxies=self.proxies, timeout=self.TIMEOUT)
-                resp = self.s.send(prepped, timeout=self.TIMEOUT)
-                content = resp.text.strip()
-                self.into_file(self.file_prefix + company_code + "/",  page_no, content)
-                # TODO: 当前请求成功, 修改redis中的标志位
-                # 下一页请求 入Redis
-                next_page_link = self.get_next_page(content)
-                if next_page_link == "":
-                    # 有异常: 下一页的可能得不到,但当前页的源码是要存起来的(上面的代码已存储)
-                    pass
-                elif next_page_link == "complete":
-                    pass
-                else:
-                    # TODO: next_page_link入Redis
-                    pass
+                            url = "http://kns.cnki.net" + url
+                    req = Request("GET", url=url, headers=self.headers)
+                    prepped = self.s.prepare_request(req)
+                    # TODO: 这里连proxies也可以不用, 但是否会封我们的IP?  先不用看是否会被封(先不用代理), 如果被封了再加上代理, 感觉应该不会被封, 应该是按照Cookie去反爬的, Cookie中携带着IP信息(如果IP自动登录了, 那么Cookie里只有登录后的信息(无IP信息, 但登录信息其实就相当于IP信息了);如果IP没有自动登录, 那么Cookie里有IP的信息)
+                    # resp = self.s.send(prepped, proxies=self.proxies, timeout=self.TIMEOUT)
+                    resp = self.s.send(prepped, timeout=self.TIMEOUT)
+                    content = resp.text.strip()
+                    self.into_file(self.file_prefix + company_code + "/_", patent_no, content)      # 详情页的网页源码存储在以"_"开头的文件里
+                    self.redis_client.into_redis(quadruple, "-1")  # 当前请求成功, 修改redis中的标志位
+
             except Exception as e:
-                self.error_logger.error("in crawl(). " + repr(e))
+                self.error_logger.error("in crawl(). Exception: {0}\n{1}\n".format(e, "---"*20))
 
     def get_page_no(self, page_link):
         """
@@ -222,10 +275,28 @@ class CNKIPatentSpider:
             page_no = page_link[start:start+end].replace("curpage=", "")
             print("page_no:", page_no)
         except Exception as e:
-            self.error_logger.error("in get_page_no(). page_link:{0}. Exception: {1}".format(page_link, e))
+            self.error_logger.error("in get_page_no(). page_link:{0}. Exception: {1}\n{2}\n".format(page_link, e, "---"*20))
             return ""
         else:
             return page_no
+
+    def get_patent_no(self, url):
+        """
+        :param url: str
+        :return: patent_no. str
+        CurRec 所有返回数据中的第几条数据(不是本页中的第几条数据)
+        url: http://kns.cnki.net/kns/detail/detail.aspx?QueryID=0&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106506563A
+        """
+        try:
+            start = url.index("CurRec=")
+            end = url[start:].index("&")
+            patent_no = url[start:start+end].replace("CurRec=", "")
+            print("patent_no:", patent_no)
+        except Exception as e:
+            self.error_logger.error("in get_patent_no(). url:{0}. Exception: {1}\n{2}\n".format(url, e, "---"*20))
+            return ""
+        else:
+            return patent_no
 
     def get_next_page(self, content):
         selector = etree.HTML(content)
@@ -236,6 +307,8 @@ class CNKIPatentSpider:
                 next_page = next_page[0]
                 next_page_hrefs = next_page.xpath('a/@href')
                 next_page_texts = next_page.xpath('a/text()')
+                if len(next_page_texts) < 1:    # 当前页的查询结果是0条
+                    return "no_result"
                 if next_page_texts[-1].replace(" ", "") == "下一页":
                     # 存在下一页, 继续访问
                     return next_page_hrefs[-1]
@@ -245,8 +318,18 @@ class CNKIPatentSpider:
             else:
                 raise Exception("len(next_page) != 1. len(next_page):{0}. content: {1}".format(len(next_page), content))
         except Exception as e:
-            self.error_logger.error(repr(e))
+            self.error_logger.critical("[可能需要补全]下一页的数据没有得到. Exception: {0}. Content: {1}\n{2}\n".format(e, content, "---"*20))
             return ""   # 下一页的可能得不到,但当前页的源码是要存起来的
+
+    def get_details_urls(self, content):
+        """
+        :param content: 页面的源码 
+        :return: 各个专利详细信息页面的url
+        """
+        selector = etree.HTML(content)
+        details_urls = selector.xpath('//a[@class="fz14"]/@href')
+        print(details_urls)
+        return details_urls    # ["/kns/detail/detail.aspx?QueryID=13&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106503084A", ...]
 
     def into_file(self, file_path, filename, content):
         """
@@ -265,36 +348,34 @@ class CNKIPatentSpider:
         NOTE: Only run once.
         Field: company_code||company_name||url||abbr/full
                 url:
-                    "": 初始页(当前公司的第一页)
-                    "?curpage=.....": 非初始页(不包含前缀http://kns.cnki.net/kns/brief/brief.aspx)
+                    "+": 检索页的初始页(当前公司的第一页)
+                    "+?curpage=.....": 检索页的非初始页(不包含前缀http://kns.cnki.net/kns/brief/brief.aspx)
+                    "-/kns/detail/detail.aspx?....": 详情页
         Value: flag
-                0: initial value
-                -1: Done
-                >0: timestamp
+                 0: initial value
+                -1: Done. 当前请求成功.
+                -2: page_no没有得到, url有问题. 以后再请求还是会有问题, 所以结束这一请求.
         """
         for code, abbr_full in self.code_abbr_full_dict.items():
             abbr, full = abbr_full
-            field = "{0}||{1}||||abbr".format(code, abbr)
+            field = "{0}||{1}||+||abbr".format(code, abbr)
             if abbr in full:
                 # 对于简称包含在全称内的，应使用简称进行检索
                 self.redis_client.into_redis(field, "0")
             else:
                 # 对于简称不包含在全称内的情况：应采用全称简称都抓取(会存在数据的重复抓取, 最后需要对抓取到的数据进行去重)
                 self.redis_client.into_redis(field, "0")
-                field = "{0}||{1}||||full".format(code, full)
+                field = "{0}||{1}||+||full".format(code, full)
                 self.redis_client.into_redis(field, "0")
 
     def operate(self):
         count = 0
         continue_flag = True
-        pool = multiprocessing.Pool(processes=6)    # IP代理数目是6, 所以这里把进程数目也设置为6
         while continue_flag:
             continue_flag = False
-            count += 1
-            print("进入次数:", count)
-
+            pool = multiprocessing.Pool(processes=6)  # IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
-                print(type(item), item)   # <class 'tuple'>
+                print(type(item), item)   # <class 'tuple'> (b'300104||\xe4\xb9\x90\xe8\xa7\x86\xe7\xbd\x91||+||abbr', b'0')
                 flag = int(item[1].decode("utf-8"))    # {0: initial value;    -1: Done;    >0: timestamp}
                 quadruple = item[0].decode("utf-8").split("||")   # quadruple: 四元组
                 # company_code||company_name||url||abbr/full
@@ -303,22 +384,20 @@ class CNKIPatentSpider:
                 url = quadruple[2]
                 abbr_or_full = quadruple[3]
 
-                if flag >= 0:
+                if flag == 0:    # 0: 初始值, 当前quadruple还没有开始执行, 或表示当前quadruple上次没有执行成功
                     continue_flag = True
-                    if flag == 0:  # 0: 初始值, 当前quadruple还没有执行
-                        # NOTE: 与CJOSpider不同, 这儿就应该hset(timestamp), 而不是quadruple真正执行的时候才hset(timestamp).
-                        pool.apply_async(self.crawl, (company_code, company_name, url, abbr_or_full))
-                    else:   # flag > 0, which means flag is a timestamp.
-                        # 当前quadruple在flag的时候真正执行了
-                        if int(time.time()) - flag > self.COMPLETE_TIMEOUT:  # 超过了self.COMPLETE_TIMEOUT时间, 当前quadruple的状态还没有标识为完成, 则认为上次执行失败了
-                            # 当前quadruple上次执行失败了, 重新执行
-                            pool.apply_async(self.crawl, (company_code, company_name, url, abbr_or_full))
-                        else:
-                            pass  # 什么都不做, 还没到超时时间
+                    pool.apply_async(self.crawl, (company_code, company_name, url, abbr_or_full))
+
+            pool.close()
+            pool.join()
+            print("第{0}轮执行完成.".format(count))
+            count += 1
 
 
 if __name__ == "__main__":
     spider = CNKIPatentSpider()
     spider.initialize_redis()
+    spider.operate()
+
     # spider.get_cookie_by_selenium()
     # spider.get_cookie_by_requests()

@@ -22,6 +22,7 @@ class RedisClient:
         :param value: str
         :return: None
         """
+        # into_redis(): 若field已存在, 就是修改它的值; 如果field不存在, 就是增加这个新的field
         self.REDIS_URI.hset(KEY_NAME, field, value)
 
     def get_redis_uri(self):
