@@ -263,6 +263,23 @@ class TYCNameComID:
                 self.get_copyreg(comid, 1, codes)
                 self.get_icp(comid, codes)
 
+        """
+        # 日志中没有爬出来的重新跑 13个
+        copyreg_list = ["25953289_1_600744", "346296748_2_300267", "152322767_2_300178", "141862203_1_300147"]
+        for copyreg in copyreg_list:
+            temp_list = copyreg.split("_")
+            self.get_copyreg(temp_list[0], int(temp_list[1]), temp_list[2])
+
+        patent_list = ["31269706_1_300422", "21435231_1_300282", "14024036_1_300271", "25624757_1_300263", "2348873834_1_300256", "441917155_1_300123"]
+        for patent in patent_list:
+            temp_list = patent.split("_")
+            self.get_patent(temp_list[0], int(temp_list[1]), temp_list[2])
+        
+        icp_list = ["2624175_300324", "31279568_300272", "310640763_002460"]
+        for icp in icp_list:
+            temp_list = icp.split("_")
+            self.get_icp(temp_list[0], temp_list[1])
+        """
 
 if __name__ == "__main__":
     file_name = os.path.join(os.getcwd(), "tianyancha_json.md")
