@@ -33,6 +33,8 @@ class CheckRedis:
                 timeout_count += 1
                 print(doc_id, flag_code_timestamp)
         print("success_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
+        # 20170614_1510
+        # success_count: 175612, zero_count: 655719, timeout_count: 12304
 
     def check_tasks_redis(self):
         success_count = 0
@@ -63,6 +65,9 @@ class CheckRedis:
                 print("retry {0} times. last time to crawl: {1}".format(left, right))
         print("success_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
         print("success_1_count: {0}, success_2_count: {1}, success_3_count: {2}".format(success_1_count, success_2_count, success_3_count))
+        # 20170614_1510
+        # success_count: 51585, zero_count: 6277, timeout_count: 22934
+        # success_1_count: 48445, success_2_count: 2736, success_3_count: 404
 
     def check_cnki_redis(self):
         success_count = 0
@@ -80,12 +85,12 @@ class CheckRedis:
                 error_count += 1
                 print("[error] url:", url)
         print("success_count: {0}, zero_count: {1}, error_count: {2}".format(success_count, zero_count, error_count))
-        # 20170614 success_count: 110402, zero_count: 8613, error_count: 0
+        # 20170614_1510 success_count: 111640, zero_count: 8642, error_count: 0
 
 
 if __name__ == "__main__":
     cr = CheckRedis()
-    # cr.check_doc_id_redis()
+    cr.check_doc_id_redis()
     # cr.check_tasks_redis()
-    cr.check_cnki_redis()
+    # cr.check_cnki_redis()
 
