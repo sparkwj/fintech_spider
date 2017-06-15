@@ -375,7 +375,7 @@ class CNKIPatentSpider:
             continue_flag = False
             pool = multiprocessing.Pool(processes=6)  # IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
-                print(type(item), item)   # <class 'tuple'> (b'300104||\xe4\xb9\x90\xe8\xa7\x86\xe7\xbd\x91||+||abbr', b'0')
+                # print(type(item), item)   # <class 'tuple'> (b'300104||\xe4\xb9\x90\xe8\xa7\x86\xe7\xbd\x91||+||abbr', b'0')
                 flag = int(item[1].decode("utf-8"))    # {0: initial value;    -1: Done;    >0: timestamp}
                 quadruple = item[0].decode("utf-8").split("||")   # quadruple: 四元组
                 # company_code||company_name||url||abbr/full
@@ -396,7 +396,7 @@ class CNKIPatentSpider:
 
 if __name__ == "__main__":
     spider = CNKIPatentSpider()
-    spider.initialize_redis()
+    # spider.initialize_redis()
     spider.operate()
 
     # spider.get_cookie_by_selenium()
