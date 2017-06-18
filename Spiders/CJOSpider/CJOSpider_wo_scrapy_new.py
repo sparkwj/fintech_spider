@@ -29,7 +29,7 @@ from Spiders.CJOSpider.utils import generate_logger
 class CJOSpider_New():
     """
     w/o Scrapy.
-    裁判文书网改版后使用Selenium直接爬取doc_id案件详情信息
+    裁判文书网改版后，爬取策略无法直接使用 Selenium直接爬取doc_id案件详情信息
     """
     error_logger = generate_logger("new_cjodocid_error")
     proxies = {}
