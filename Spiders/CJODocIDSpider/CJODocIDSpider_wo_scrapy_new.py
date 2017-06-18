@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
-# File: CJODocIDSpider_wo_scrapy.py
+# File: CJODocIDSpider_wo_scrapy_new.py
 # Author: lxw
 # Date: 6/18/17 12:08 AM
 
@@ -22,8 +22,8 @@ import redis
 # import time
 import pymongo
 
-from Spiders.CJOSpider.get_proxy import get_proxy
-from Spiders.CJOSpider.utils import generate_logger
+from Spiders.CJODocIDSpider.get_proxy import get_proxy
+from Spiders.CJODocIDSpider.utils import generate_logger
 
 
 class CJODocIDSpider_New():
