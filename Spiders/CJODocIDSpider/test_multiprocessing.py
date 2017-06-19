@@ -23,7 +23,7 @@ import re
 import redis
 from selenium import webdriver
 import sys
-# import time
+import time
 
 sys.path.append("/home/lxw/IT/projects/fintech_spider")
 sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
@@ -164,8 +164,26 @@ class CJODocIDSpider_New():
             print("第{0}轮执行完成.".format(count))
             count += 1
 
+    def print_str(self, string):
+        time.sleep(2)
+        print("in print_str(): ", string)
+
+    def test_multiprocess(self):
+        times = 0
+        pool = multiprocessing.Pool(processes=6)
+        while times < 10:
+            pool.apply_async(self.print_str, (str(times),))
+            times += 1
+
+        pool.close()
+        pool.join()
+        # time.sleep(10)
+        print("Complete!")
+
+
 if __name__ == "__main__":
     cjo_docid = CJODocIDSpider_New()
     # cjo_docid.get_doc_id_detail()
     # cjo_docid.test_proxy()
-    cjo_docid.operate()
+    # cjo_docid.operate()
+    cjo_docid.test_multiprocess()
