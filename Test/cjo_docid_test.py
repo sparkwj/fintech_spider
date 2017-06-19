@@ -11,6 +11,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 from fake_useragent import UserAgent
 
+from Spiders.CJOSpider.get_proxy import get_proxy
+
 
 class NewCJOSpider:
     ua = UserAgent()
@@ -20,45 +22,55 @@ class NewCJOSpider:
         "Referer": "http://wenshu.court.gov.cn/content/content?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906",
         "User-Agent": ua.random
     }
+    index_url = "http://wenshu.court.gov.cn/"
     parent_url = "http://wenshu.court.gov.cn/content/content?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906"
     url = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906"
-    TIMEOUT = 120
+    # TIMEOUT = 120
+    TIMEOUT = 60
     cases_per_page = 20
     proxies = {}
 
     def get_driver_chrome(self):
         options = webdriver.ChromeOptions()
-        """
-        # proxy = get_proxy()
-        proxy = "111.13.2.131:80"
+        proxy = get_proxy()
+        # proxy = "111.13.2.131:80"
         # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
         self.proxies["http"] = proxy
         self.proxies["https"] = proxy
         if proxy:
             options.add_argument('--proxy-server=' + proxy)
         driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
-        """
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver")
+        # driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver")
         # driver = webdriver.PhantomJS(executable_path=r"/home/lxw/Downloads/phantomjs/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)
         driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
         return driver
 
+    def test_proxy(self):
+        driver = self.get_driver_chrome()
+        driver.implicitly_wait(30)
+        driver.get("http://xiujinniu.com/xiujinniu/index.php")
+        print(driver.page_source)
+
     def get_cookie_by_selenium(self):
         driver = self.get_driver_chrome()
         driver.implicitly_wait(60)
         driver.get(self.parent_url)
         driver.find_element_by_class_name("content_main")
-        print(driver.page_source)
+        """
+        driver.get(self.index_url)
+        driver.find_element_by_id("nav")
+        """
+        # print(driver.page_source)
         cookie_list = driver.get_cookies()
         cookie_str_list = []
         for cookie_dict in cookie_list:
             cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
         cookie_str = " ".join(cookie_str_list)
         print("Cookie str:", cookie_str)
-        # time.sleep(10)
-        driver.quit()
+        time.sleep(1000)
+        # driver.quit()
         return cookie_str
 
     def get_cookie_by_requests(self):
@@ -74,7 +86,8 @@ class NewCJOSpider:
     def crawl_basic_info(self):
         url = "http://wenshu.court.gov.cn/List/ListContent"
         data = {
-            "Param": "案件类型:刑事案件,裁判日期:2017-04-01 TO 2017-04-01,法院层级:高级法院",
+            # "Param": "案件类型:刑事案件,裁判日期:2017-04-01 TO 2017-04-01,法院层级:高级法院", # OK
+            "Param": "案件类型:刑事案件",   # OK: 4875654
             # "Param": "裁判日期:1996-01-10 TO 1996-01-10",# "1996-01-10": 1, "1996-02-07": 1
             "Index": 1,
             "Page": self.cases_per_page,
@@ -102,8 +115,9 @@ class NewCJOSpider:
 
 if __name__ == '__main__':
     docid_spider = NewCJOSpider()
-    # docid_spider.get_cookie_by_selenium()
-    docid_spider.crawl_basic_info()
+    # docid_spider.test_proxy()
+    docid_spider.get_cookie_by_selenium()
+    # docid_spider.crawl_basic_info()
     # docid_spider.crawl_doc_id_content()
 
 """

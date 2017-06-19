@@ -45,7 +45,6 @@ class CJODocIDSpider_New():
 
     def get_chrome_driver(self):
         options = webdriver.ChromeOptions()
-        # TODO: proxy
         proxy = get_proxy()
         # proxy = "120.26.215.154:3128"
         # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
@@ -55,8 +54,6 @@ class CJODocIDSpider_New():
             options.add_argument('--proxy-server=' + proxy)
         else:
             return None    # proxy is essential
-        """
-        """
         driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)

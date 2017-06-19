@@ -13,6 +13,24 @@ PyMongo is thread-safe[Frequently Asked Questions](http://api.mongodb.com/python
 Redis:
 [how to design multi-process program using redis in python](https://stackoverflow.com/questions/38980000/how-to-design-multi-process-program-using-redis-in-python#)
 Each instance of the program should spawn its own ConnectionPool.
+
+返回的结果有可能是：
+1. 正确值
+2. 空白
+3. 乱码js
+
+1. 比较短的案例：
+"4a5c7734-fbb6-447b-a036-02191d3ee2b7",
+"27241ed4-619d-4d0e-a18c-a74500f0e6ca",
+"d6a12c3c-cdb5-4147-8fc3-a74500f0e6eb",
+"1c83095f-396a-442c-831b-a74500f0e6ae",
+"5b19caf4-3858-4796-b241-a74500f0e702",
+【下面的不短】
+"1a6ebb9e-f279-4cc4-a989-a74500b820bb",
+"28f1ce2b-269f-430e-bd4e-a75100f915de",
+"29c6d854-14f9-492f-ae6c-a74500b82091",
+"5365d386-e69b-4af9-9c21-a75100f912d5",
+"a72c6c87-d7ef-44a7-b5d1-a75100f91467"
 """
 
 import multiprocessing
@@ -41,7 +59,12 @@ class CJOSpider_New():
     # 应该每个进程单独创建ConnectionPool(这儿的只有主进程可以使用)
     pool = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
     redis_uri = redis.Redis(connection_pool=pool)
-    redis_key = "DOC_ID_HASH"
+    redis_key = "TASKS_HASH"
+
+    doc_id_list = [
+        "4a5c7734-fbb6-447b-a036-02191d3ee2b7", "27241ed4-619d-4d0e-a18c-a74500f0e6ca", "d6a12c3c-cdb5-4147-8fc3-a74500f0e6eb",
+        "1c83095f-396a-442c-831b-a74500f0e6ae", "5b19caf4-3858-4796-b241-a74500f0e702"
+    ]
 
     def get_chrome_driver(self):
         options = webdriver.ChromeOptions()
