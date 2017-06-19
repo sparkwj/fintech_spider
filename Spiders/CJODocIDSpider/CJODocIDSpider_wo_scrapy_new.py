@@ -61,7 +61,7 @@ class CJODocIDSpider_New():
             options.add_argument('--proxy-server=' + proxy)
         else:
             return None    # proxy is essential
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
+        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)
         driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
