@@ -16,11 +16,16 @@ Each instance of the program should spawn its own ConnectionPool.
 """
 
 import multiprocessing
-from selenium import webdriver
+import pymongo
 import re
 import redis
+from selenium import webdriver
+import sys
 # import time
-import pymongo
+
+sys.path.append("/home/lxw/IT/projects/fintech_spider")
+sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
+sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders/CJODocIDSpider")
 
 from Spiders.CJODocIDSpider.get_proxy import get_proxy
 from Spiders.CJODocIDSpider.utils import generate_logger
@@ -142,7 +147,7 @@ class CJODocIDSpider_New():
         continue_flag = True
         while continue_flag:
             continue_flag = False
-            pool = multiprocessing.Pool(processes=1)    # IP代理数目是6, 所以这里把进程数目也设置为6
+            pool = multiprocessing.Pool(processes=6)    # IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
                 # print(type(item), item)    # <class 'tuple'> (b'd6613396-b7d1-4199-ae4e-b3b36fdd7fda', b'0')
                 doc_id = item[0].decode("utf-8")
