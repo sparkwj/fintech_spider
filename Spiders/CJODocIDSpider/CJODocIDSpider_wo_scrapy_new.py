@@ -146,7 +146,7 @@ class CJODocIDSpider_New():
                 pool_process = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
                 redis_uri_process = redis.Redis(connection_pool=pool_process)
                 redis_key_process = "DOC_ID_HASH"
-                # redis_uri_process.hset(redis_key_process, doc_id, "-1")  # Success 只有成功是需要设置的，不成功的不需要设置
+                redis_uri_process.hset(redis_key_process, doc_id, "-1")  # Success 只有成功是需要设置的，不成功的不需要设置
         except Exception as e:
             self.error_logger.error("lxw_Exception_NOTE: {0}. page_source: {1}\n{2}\n\n".format(e, page_source, "--"*30))
 
@@ -161,7 +161,7 @@ class CJODocIDSpider_New():
         continue_flag = True
         while continue_flag:
             continue_flag = False
-            pool = multiprocessing.Pool(processes=1)    # IP代理数目是6, 所以这里把进程数目也设置为6
+            pool = multiprocessing.Pool(processes=6)    # IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
                 # print(type(item), item)    # <class 'tuple'> (b'd6613396-b7d1-4199-ae4e-b3b36fdd7fda', b'0')
                 doc_id = item[0].decode("utf-8")
