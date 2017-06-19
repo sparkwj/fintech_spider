@@ -13,6 +13,8 @@ PyMongo is thread-safe[Frequently Asked Questions](http://api.mongodb.com/python
 Redis:
 [how to design multi-process program using redis in python](https://stackoverflow.com/questions/38980000/how-to-design-multi-process-program-using-redis-in-python#)
 Each instance of the program should spawn its own ConnectionPool.
+
+*/5 * * * * pg defunct|awk '{print $2}'|xargs kill -9
 """
 
 import multiprocessing
@@ -69,14 +71,13 @@ class CJODocIDSpider_New():
         driver = self.get_chrome_driver()
         driver.implicitly_wait(30)
         driver.get("http://xiujinniu.com/xiujinniu/index.php")
-        print(driver.page_source)
 
     def get_doc_id_detail(self, doc_id):
         """
         def get_cookie(self):
         这里直接是通过这个函数获取到网页的源代码, 这个函数可以作为TASKS_HASH的get_cookie()函数
         """
-        print("in get_doc_id_detail().")
+        # print("in get_doc_id_detail().")
         try:
             driver = self.get_chrome_driver()
             if not driver:
@@ -90,6 +91,7 @@ class CJODocIDSpider_New():
             driver.find_element_by_xpath("/html/body")
             # return driver.page_source
             self.process_page_source(doc_id, driver.page_source)
+            driver.quit()
         except Exception as e:
             self.error_logger.error("lxw Exception: {0}\ndocid: {1}\n{2}\n\n".format(e, doc_id, "--"*30))
         """
@@ -105,7 +107,7 @@ class CJODocIDSpider_New():
         """
 
     def process_page_source(self, doc_id, page_source):
-        print("in process_page_source().")
+        # print("in process_page_source().")
         if "<title>502</title>" in page_source:
             return
         elif "remind" in page_source:
