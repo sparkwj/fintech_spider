@@ -18,6 +18,7 @@ Each instance of the program should spawn its own ConnectionPool.
 """
 
 import multiprocessing
+import os
 import pymongo
 import re
 import redis
@@ -25,9 +26,19 @@ from selenium import webdriver
 import sys
 # import time
 
-sys.path.append("/home/lxw/IT/projects/fintech_spider")
-sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
-sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders/CJODocIDSpider")
+abspath = os.path.abspath(__file__)
+current_dir = os.path.dirname(abspath)
+# print("current_dir:", current_dir)
+parent_dir = os.path.dirname(current_dir)
+# print("parent_dir:", parent_dir)
+grand_dir = os.path.dirname(parent_dir)
+# print("grand_dir:", grand_dir)
+# sys.path.append("/home/lxw/IT/projects/fintech_spider")
+# sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
+# sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders/CJODocIDSpider")
+sys.path.append(grand_dir)
+sys.path.append(parent_dir)
+sys.path.append(current_dir)
 
 from Spiders.CJODocIDSpider.get_proxy import get_proxy
 from Spiders.CJODocIDSpider.utils import generate_logger
@@ -61,7 +72,7 @@ class CJODocIDSpider_New():
             options.add_argument('--proxy-server=' + proxy)
         else:
             return None    # proxy is essential
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
+        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)
         driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
@@ -91,9 +102,10 @@ class CJODocIDSpider_New():
             driver.find_element_by_xpath("/html/body")
             # return driver.page_source
             self.process_page_source(doc_id, driver.page_source)
-            driver.quit()
         except Exception as e:
             self.error_logger.error("lxw Exception: {0}\ndocid: {1}\n{2}\n\n".format(e, doc_id, "--"*30))
+        finally:
+            driver.quit()
         """
         cookie_list = driver.get_cookies()
         cookie_str_list = []

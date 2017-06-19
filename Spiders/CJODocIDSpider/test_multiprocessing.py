@@ -18,6 +18,7 @@ Each instance of the program should spawn its own ConnectionPool.
 """
 
 import multiprocessing
+import os
 import pymongo
 import re
 import redis
@@ -25,10 +26,19 @@ from selenium import webdriver
 import sys
 import time
 
-sys.path.append("/home/lxw/IT/projects/fintech_spider")
-sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
-sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders/CJODocIDSpider")
-
+abspath = os.path.abspath(__file__)
+current_dir = os.path.dirname(abspath)
+# print("current_dir:", current_dir)
+parent_dir = os.path.dirname(current_dir)
+# print("parent_dir:", parent_dir)
+grand_dir = os.path.dirname(parent_dir)
+# print("grand_dir:", grand_dir)
+# sys.path.append("/home/lxw/IT/projects/fintech_spider")
+# sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders")
+# sys.path.append("/home/lxw/IT/projects/fintech_spider/Spiders/CJODocIDSpider")
+sys.path.append(grand_dir)
+sys.path.append(parent_dir)
+sys.path.append(current_dir)
 from Spiders.CJODocIDSpider.get_proxy import get_proxy
 from Spiders.CJODocIDSpider.utils import generate_logger
 
