@@ -4,6 +4,7 @@
 #Author: lxw
 #Date: Fri 16 Jun 2017 11:20:45 AM CST
 
+import random
 import requests
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -22,13 +23,18 @@ class NewCJOSpider:
         "Referer": "http://wenshu.court.gov.cn/content/content?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906",
         "User-Agent": ua.random
     }
-    index_url = "http://wenshu.court.gov.cn/"
-    parent_url = "http://wenshu.court.gov.cn/content/content?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906"
-    url = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=f42dfa1f-b5ca-4a22-a416-a74300f61906"
     # TIMEOUT = 120
     TIMEOUT = 60
     cases_per_page = 20
     proxies = {}
+    doc_id_list = [
+        "4a5c7734-fbb6-447b-a036-02191d3ee2b7", "27241ed4-619d-4d0e-a18c-a74500f0e6ca", "d6a12c3c-cdb5-4147-8fc3-a74500f0e6eb",
+        "1c83095f-396a-442c-831b-a74500f0e6ae", "5b19caf4-3858-4796-b241-a74500f0e702"
+    ]
+    doc_id = random.choice(doc_id_list)
+    index_url = "http://wenshu.court.gov.cn/"
+    parent_url = "http://wenshu.court.gov.cn/content/content?DocID=" + doc_id
+    url = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=" + doc_id
 
     def get_driver_chrome(self):
         options = webdriver.ChromeOptions()
@@ -39,7 +45,7 @@ class NewCJOSpider:
         self.proxies["https"] = proxy
         if proxy:
             options.add_argument('--proxy-server=' + proxy)
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
+        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
         # driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver")
         # driver = webdriver.PhantomJS(executable_path=r"/home/lxw/Downloads/phantomjs/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")
         # 设置超时时间
@@ -58,6 +64,7 @@ class NewCJOSpider:
         driver.implicitly_wait(60)
         driver.get(self.parent_url)
         driver.find_element_by_class_name("content_main")
+        # todo: self.index_url OK?
         """
         driver.get(self.index_url)
         driver.find_element_by_id("nav")
@@ -69,27 +76,63 @@ class NewCJOSpider:
             cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
         cookie_str = " ".join(cookie_str_list)
         print("Cookie str:", cookie_str)
-        time.sleep(1000)
-        # driver.quit()
+        # time.sleep(1000)
+        driver.quit()
         return cookie_str
 
     def get_cookie_by_requests(self):
-        requests.get(self.parent_url)
-        # todo: test
+        proxy = get_proxy()
+        proxies = {}
+        proxies["http"] = proxy
+        proxies["https"] = proxy
+        # resp = requests.get("http://xiujinniu.com/xiujinniu/index.php", proxies=proxies, headers=self.headers)
+        resp = requests.get(self.index_url, proxies=proxies, headers=self.headers)
+        # resp = requests.get(self.parent_url, proxies=proxies, headers=self.headers)
+        # print(resp.text)
+        cookie_dict = dict(resp.cookies)
+        cookie_list = ["Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5={0}; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5={0}".format(int(time.time()))]
+        for key, value in cookie_dict.items():
+            cookie_list.append("{0}={1};".format(key, value))
+        cookie_str = " ".join(cookie_list)
+        print(cookie_str)
+        # 通过index_url获取到的Cookie是不全的，必须通过
 
-    def crawl_doc_id_content(self):
-        # self.headers["Cookie"] = self.get_cookie_by_selenium()
+        # 可用的Cookie形式如下：
+        print("---------\n", "FSSBBIl1UgzbN7N80T=1BxDCAWQIuPmHXsTUT6xDtENw.icd8kyKJHvxblMsefOynmCogIlM7EImGahnmKpyF.gi4T16wvKKvoU7OJucbYbo5cX888YPTOyARuSz.J6CfeDMhiQFBaLI01rIhcABy9UfdFFPl63x8O5tR2.KRBpmWleFac.3IbYE4s3nklAEMegCVnhMXlNBDTcBYAy29.3iJkkpAnuBnEXHCUfdGViS0GWDIBq6_rmGt79OxxveWCgM4jHlBh1jOnQ37x8x2s6CyauK1J3TS9TDIy_5MOkfdNEvGISbMdsb_JcFHtIUuCZ7stB41qe6svK_iELhs5V; _gscs_2116842793=978637234xxwv013|pv:1; _gscu_2116842793=978637233f0ihw13; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=rSE4ZY4eEGNUDbJKn2Kn.MXUf5FU9Bnazz_tnfUvrIVFiCqA4iVYVmw5P2347Sd.;")
+        return cookie_str
+        """
+        # NOTE: 相当于不用Cookie直接访问doc_id详情页，是不行的(再次验证必须得用Cookie来访问)
+        proxy = get_proxy()
+        proxies = {}
+        proxies["http"] = proxy
+        proxies["https"] = proxy
+        # resp = requests.get("http://xiujinniu.com/xiujinniu/index.php", proxies=proxies, headers=self.headers)
+        resp = requests.get(self.parent_url, proxies=proxies, headers=self.headers)
+        print(resp.text)
+        """
+
+    def crawl_doc_id_content(self, cookie_str):
+        if not cookie_str:
+            return
+        self.headers["Cookie"] = cookie_str
         # print(self.headers)
-        resp = requests.get(url=self.url, headers=self.headers)
+        proxy = get_proxy()
+        proxies = {}
+        proxies["http"] = proxy
+        proxies["https"] = proxy
+        resp = requests.get(url=self.url, proxies=proxies, headers=self.headers)
+        # resp = requests.get(url=self.url, headers=self.headers)    # NOTE: 没有使用代理(或者是使用其他的代理)，都可以通过Cookie直接爬取，这就意味着反爬信息完全依赖Cookie来实现
         print(resp.text)
 
-    def crawl_basic_info(self):
+    def crawl_basic_info(self, cookie_str):
+        if not cookie_str:
+            return
         url = "http://wenshu.court.gov.cn/List/ListContent"
         data = {
             # "Param": "案件类型:刑事案件,裁判日期:2017-04-01 TO 2017-04-01,法院层级:高级法院", # OK
             "Param": "案件类型:刑事案件",   # OK: 4875654
             # "Param": "裁判日期:1996-01-10 TO 1996-01-10",# "1996-01-10": 1, "1996-02-07": 1
-            "Index": 1,
+            "Index": 1,   # NOTE: 还是只能爬取前100页的数据, 超过100页的爬取不到
             "Page": self.cases_per_page,
             "Order": "法院层级",
             "Direction": "asc",
@@ -101,12 +144,18 @@ class NewCJOSpider:
             headers = {
                 "Host": "wenshu.court.gov.cn",
                 "Referer": "http://wenshu.court.gov.cn/List/List",
-                "Cookie": self.get_cookie_by_selenium()
+                "Cookie": cookie_str
             }
             # print("headers", headers)
             req = requests.Request("POST", url=url, data=data, headers=headers)
             prepped = s.prepare_request(req)
-            response = s.send(prepped, timeout=60)
+            proxy = get_proxy()
+            proxies = {
+                "http": proxy,
+                "https": proxy,
+            }
+            response = s.send(prepped, proxies=proxies, timeout=60)
+            # response = s.send(prepped, timeout=60)    # NOTE: 没有使用代理(或者是使用其他的代理)，都可以通过Cookie直接爬取，这就意味着反爬信息完全依赖Cookie来实现
         except Exception as e:
             print("lxw_Exception", e)
         else:
@@ -114,12 +163,63 @@ class NewCJOSpider:
 
 
 if __name__ == '__main__':
-    docid_spider = NewCJOSpider()
-    # docid_spider.test_proxy()
-    docid_spider.get_cookie_by_selenium()
-    # docid_spider.crawl_basic_info()
-    # docid_spider.crawl_doc_id_content()
+    spider = NewCJOSpider()
+    cookie_str = spider.get_cookie_by_requests()
+    spider.crawl_doc_id_content(cookie_str)
+    # spider.crawl_basic_info(cookie_str)
+    # spider.test_proxy()
+    # NOTE: cookie 没法重复使用，只能多使用一次
+    """
+    cookie_str = spider.get_cookie_by_selenium()
+    spider.crawl_doc_id_content(cookie_str)
+    spider.crawl_basic_info(cookie_str)
+    """
 
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+"""
+# 使用不同的代理，可以借用其他代理的Cookie成功抓取到数据
+    cookie_str = spider.get_cookie_by_selenium()
+    spider.crawl_doc_id_content(cookie_str)
+    spider.crawl_basic_info(cookie_str)
+    
+Process finished with exit code 0
+/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/cjo_docid_test.py
+Using IP proxy: 119.5.77.211:23032
+Cookie str: FSSBBIl1UgzbN7N80T=1BxDCAWQIuPmHXsTUT6xDtENw.icd8kyKJHvxblMsefOynmCogIlM7EImGahnmKpyF.gi4T16wvKKvoU7OJucbYbo5cX888YPTOyARuSz.J6CfeDMhiQFBaLI01rIhcABy9UfdFFPl63x8O5tR2.KRBpmWleFac.3IbYE4s3nklAEMegCVnhMXlNBDTcBYAy29.3iJkkpAnuBnEXHCUfdGViS0GWDIBq6_rmGt79OxxveWCgM4jHlBh1jOnQ37x8x2s6CyauK1J3TS9TDIy_5MOkfdNEvGISbMdsb_JcFHtIUuCZ7stB41qe6svK_iELhs5V; _gscs_2116842793=978637234xxwv013|pv:1; _gscu_2116842793=978637233f0ihw13; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=rSE4ZY4eEGNUDbJKn2Kn.MXUf5FU9Bnazz_tnfUvrIVFiCqA4iVYVmw5P2347Sd.;
+Using IP proxy: 122.236.166.99:56671
+$(function() {
+    var jsonHtmlData = "{\"Title\":\"张春发与被执行人海林市长汀镇双丰村村民委员会买卖合同纠纷一案执行裁定书\",\"PubDate\":\"2017-03-29\",\"Html\":\"<a type='dir' name='WBSB'></a><div style='TEXT-ALIGN: center; LINE-HEIGHT: 25pt; MARGIN: 0.5pt 0cm; FONT-FAMILY: 宋体; FONT-SIZE: 22pt;'>黑龙江省海林市人民法院</div><a type='dir' name='AJJBQK'></a><div style='TEXT-ALIGN: center; LINE-HEIGHT: 30pt; MARGIN: 0.5pt 0cm; FONT-FAMILY: 仿宋; FONT-SIZE: 26pt;'>执 行 裁 定 书</div><div style='TEXT-ALIGN: right; LINE-HEIGHT: 30pt; MARGIN: 0.5pt 0cm;  FONT-FAMILY: 仿宋;FONT-SIZE: 16pt; '>(2017)黑1083执121号</div><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>申请执行人张春发，男，汉族，农民，住所地黑龙江省海林市长汀镇双丰村。</div><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>被执行人海林市长汀镇双丰村村民委员会，住所地黑龙江省海林市长汀镇双丰村。</div><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>法定代表人刘景泰，该村委会主任。</div><a type='dir' name='CPYZ'></a><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>本院依据已经发生法律效力的（2017）黑1083民初107号民事判决书，责令被执行人履行义务，但被执行人海林市长汀镇双丰村村民委员会至今未履行生效法律文书确定的义务。依照《中华人民共和国民事诉讼法》第二百四十三条、《最高人民法院关于人民法院民事执行中查封、扣押、冻结财产的规定》第三十一条，裁定如下：</div><a type='dir' name='PJJG'></a><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>一、扣划海林市长汀镇双丰村村民委员会银行存款10201.79元。</div><div style='LINE-HEIGHT: 25pt;TEXT-ALIGN:justify;TEXT-JUSTIFY:inter-ideograph; TEXT-INDENT: 30pt; MARGIN: 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>本裁定送达后即发生法律效力。</div><a type='dir' name='WBWB'></a><div style='TEXT-ALIGN: right; LINE-HEIGHT: 25pt; MARGIN: 0.5pt 72pt 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>审判员　　陈富友</div><br/><div style='TEXT-ALIGN: right; LINE-HEIGHT: 25pt; MARGIN: 0.5pt 72pt 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>二〇一七年二月二十四日</div><div style='TEXT-ALIGN: right; LINE-HEIGHT: 25pt; MARGIN: 0.5pt 72pt 0.5pt 0cm;FONT-FAMILY: 仿宋; FONT-SIZE: 16pt;'>书记员　　曹　宇</div>\"}";
+    var jsonData = eval("(" + jsonHtmlData + ")");
+    $("#contentTitle").html(jsonData.Title);
+    $("#tdFBRQ").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发布日期：" + jsonData.PubDate);
+    var jsonHtml = jsonData.Html.replace(/01lydyh01/g, "\'");
+    $("#DivContent").html(jsonHtml);
+
+    //初始化全文插件
+    Content.Content.InitPlugins();
+    //全文关键字标红
+    Content.Content.KeyWordMarkRed();
+});
+Using IP proxy: 101.206.147.229:16975
+"[{\"Count\":\"4878597\"},{\"裁判要旨段原文\":\"本院认为，被告人王某为他人吸食毒品提供场所，其行为已构成容留他人吸毒罪，依法应予惩处。泰兴市人民检察院对被告人王某犯容留他人吸毒罪的指控成立，本院予以支持。被告人王某自动投案并如实供述自己的罪行，是自首，依法可以从轻处罚。被告人王某具有犯罪前科和多次吸毒劣迹，可酌情从重处罚。被告人王某主动向本院缴纳财产刑执行保证金，可酌情从轻处罚。关于辩护人提出“被告人王某具有自首、主动缴纳财产刑执行保证金等法定和酌定从轻处罚的情节，建议对被告人王某从轻处罚”的辩护意见，经查属实，本院予以采纳。依照《中华人民共和国刑法》第三百五十四条、第三百五十七条第一款、第六十七条第一款之规定，判决如下\",\"不公开理由\":\"\",\"案件类型\":\"1\",\"裁判日期\":\"2017-02-21\",\"案件名称\":\"王某容留他人吸毒罪一审刑事判决书\",\"文书ID\":\"f42dfa1f-b5ca-4a22-a416-a74300f61906\",\"审判程序\":\"一审\",\"案号\":\"（2017）苏1283刑初44号\",\"法院名称\":\"江苏省泰兴市人民法院\"},{\"裁判要旨段原文\":\"本院认为，自诉人庞某某的撤诉申请符合法律规定，依法应予准许。依照《中华人民共和国刑事诉讼法》第二百零五条第一款第（二）项、第二百零六条第一款、《最高人民法院关于适用的解释》第二百七十二条之规定，裁定如下\",\"不公开理由\":\"\",\"案件类型\":\"1\",\"裁判日期\":\"2017-03-07\",\"案件名称\":\"奚某某、张某某重婚罪一审刑事裁定书\",\"文书ID\":\"7ef23f41-b6c5-4c24-acfb-a74300f618d7\",\"审判程序\":\"一审\",\"案号\":\"（2016）苏1283刑初663号\",\"法院名称\":\"江苏省泰兴市人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人徐某某在道路上醉酒驾驶机动车，其行为已构成危险驾驶罪，依法应予惩处。泰兴市人民检察院对被告人徐某某犯危险驾驶罪的指控成立，本院予以支持。被告人徐某某归案后如实供述自己的犯罪事实，依法可以从轻处罚。被告人徐某某醉酒后驾驶机动车发生单方交通事故，且负事故的全部责任，可对其酌情从重处罚。被告人徐某某主动缴纳财产刑执行保证金，可酌情从轻处罚。依照经2011年《中华人民共和国刑法修正案（八）》修正的《中华人民共和国刑法》第一百三十三条之一第一款、第六十七条第三款之规定，判决如下\",\"不公开理由\":\"\",\"案件类型\":\"1\",\"裁判日期\":\"2017-02-20\",\"案件名称\":\"徐某某危险驾驶罪一审刑事判决书\",\"文书ID\":\"6f6df8be-6f2b-4113-89fb-a74300f618e5\",\"审判程序\":\"一审\",\"案号\":\"（2017）苏1283刑初46号\",\"法院名称\":\"江苏省泰兴市人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人李某某以非法占有为目的，伙同他人秘密窃取他人财物，数额较大，其行为已构成盗窃罪，且系共同犯罪，依法应予惩处。泰兴市人民检察院对被告人李某某犯盗窃罪的指控成立，本院予以支持。被告人李某某曾因故意犯罪被判处有期徒刑，在刑罚执行完毕后五年内再犯应当判处有期徒刑以上刑罚之罪，是累犯，应当从重处罚。被告人李某某犯罪后自动投案并如实供述了自己的罪行，是自首，依法可从轻处罚。被告人李某某伙同他人采取破坏性手段实施盗窃造成他人财产损失，可酌情从重处罚。被告人李某某的亲属主动退出违法所得，可酌情从轻处罚。依照《中华人民共和国刑法》第二百六十四条、第六十五条第一款、第六十七条第一款之规定，判决如下\",\"不公开理由\":\"\",\"案件类型\":\"1\",\"裁判日期\":\"2017-02-20\",\"案件名称\":\"李某某盗窃罪一审刑事判决书\",\"文书ID\":\"0165f4c4-1ee2-458e-a1d5-a74300f618ee\",\"审判程序\":\"一审\",\"案号\":\"（2017）苏1283刑初43号\",\"法院名称\":\"江苏省泰兴市人民法院\"},{\"裁判要旨段原文\":\"本院经审查认为，宋皓通过个人借款、协调有业务关系及无业务关联的房地产开发公司借款及帮助申请贷款等多种途径为贵州新世纪集团房地产开发有限公司开发＆ｌｄｑｕｏ;世纪佳苑＆ｒｄｑｕｏ;、＆ｌｄｑｕｏ;世纪雅苑＆ｒｄｑｕｏ;两房地产项目提供启动资金、项目运营资金，并承担资金风险。原判认为宋皓没有实际出资，而是利用职务便利为请托人黄某某谋取利益，以合作投资名义收取＆ｌｄｑｕｏ;干股＆ｒｄｑｕｏ;的理由不充分。且宋皓的部分行为与其职务无关，原判未予考虑。综上，原判认定宋皓犯受贿罪的部分事实不清，证据不足。宋皓的申诉符合《中华人民共和国刑事诉讼法》第二百四十二条第（二）项、第（三）项规定的应当重新审判条件。据此，依照《中华人民共和国刑事诉讼法》第二百四十三条第二款、二百四十四条的规定，决定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2014-12-29\",\"案件名称\":\"宋皓犯受贿罪刑事决定书\",\"文书ID\":\"8252121f-8260-4241-b707-018d52d151ca\",\"审判程序\":\"再审\",\"案号\":\"（2012）刑监字第182-1号\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"根据《中华人民共和国刑事诉讼法》第二十六条和《最高人民法院、最高人民检察院、公安部办理毒品犯罪案件适用法律若干问题的意见》第一条的规定，决定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2015-01-28\",\"案件名称\":\"邓玉玲犯非法持有毒品罪刑事决定书\",\"文书ID\":\"afcea010-7f0b-4f89-9a0a-3023dfbefed2\",\"审判程序\":\"其他\",\"案号\":\"（2015）刑立他字第8号\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院经审查认为，原判认定王某某明知所借款项为公款、与国家工作人员共谋挪用公款的犯罪事实不清，证据不足，申诉人王某某的申诉符合《中华人民共和国刑事诉讼法》第二百四十二条第（二）项、第（三）项规定的应当重新审判条件。据此，依照《中华人民共和国刑事诉讼法》第二百四十三条第二款、二百四十四条的规定，决定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2015-10-22\",\"案件名称\":\"王守仁犯挪用公款罪刑事决定书\",\"文书ID\":\"029bb843-b458-4d1c-8928-fe80da403cfe\",\"审判程序\":\"再审\",\"案号\":\"（2015）刑监字第27号\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院经审查认为，申诉人方义的申诉符合《中华人民共和国刑事诉讼法》第二百四十二条规定的应当重新审判情形，决定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2014-07-21\",\"案件名称\":\"方职务侵占罪申诉刑事决定书\",\"文书ID\":\"5d9f09e0-d105-4a05-8634-31b811f2c9c9\",\"审判程序\":\"再审\",\"案号\":\"（2014）刑监字第11号\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院经审查认为，申诉人的申诉符合《中华人民共和国刑事诉讼法》第二百四十二条第（二）项规定的应当重新审判情形。据此，依照《中华人民共和国刑事诉讼法》第二百四十三条第二款的规定，决定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-12-30\",\"案件名称\":\"王某某合同诈骗指令再审决定书\",\"文书ID\":\"9aed51ab-f8b3-4f20-bf6e-06d8960c53d0\",\"审判程序\":\"再审审查与审判监督\",\"案号\":\"（2013）刑监字第59号\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人李良酒后无端滋事，持刀在公共场所行凶，致3人死亡、1人重伤、2人轻伤、3人轻微伤，其行为已构成故意杀人罪，且犯罪情节极其恶劣，后果严重，社会危害大，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-06-24\",\"案件名称\":\"李良故意杀人死刑复核案刑事裁定书\",\"文书ID\":\"f073d26d-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人崔昌贵、李占勇伙同他人贩卖、运输、制造“麻古”、氯胺酮，其行为已构成贩卖、运输、制造毒品罪。被告人杨林渠伙同他人贩卖、制造“麻古”，其行为已构成贩卖、制造毒品罪。被告人赵建东伙同他人贩卖、运输、制造氯胺酮，其行为已构成贩卖、运输、制造毒品罪。被告人刘文涛伙同他人贩卖、运输、制造“麻古”，伙同他人贩卖、运输氯胺酮，其行为已构成贩卖、运输、制造毒品罪。崔昌贵、李占勇、赵建东、刘文涛伙同他人制造毒品并进行贩卖、运输，杨林渠参与制造毒品并进行贩卖，五人在共同犯罪中均起主要作用，均系主犯，均应按照其所参与的全部犯罪处罚。崔昌贵参与制造、贩卖、运输“麻古”约137.097千克、氯胺酮约545.915千克；李占勇参与制造、贩卖、运输“麻古”约120.129千克、氯胺酮约351千克；杨林渠参与制造、贩卖“麻古”约105千克；赵建东参与制造、贩卖、运输氯胺酮约537.469千克；刘文涛参与制造、贩卖、运输“麻古”约36.929千克、氯胺酮约359千克，五被告人参与毒品犯罪的数量均特别巨大，且系长期从事源头性的毒品犯罪，大部分毒品已流入社会，社会危害极大，罪行极其严重。李占勇曾因犯罪被判刑，刑满释放后又犯罪，赵建东曾因犯罪被判处缓刑，缓刑考验期满后又犯罪，主观恶性深，人身危险性大。对五被告人均应依法惩处。第一审、第二审判决认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-06-24\",\"案件名称\":\"崔昌贵等贩卖、运输、制造毒品、杨林渠贩卖、制造毒品死刑复核刑事裁定书\",\"文书ID\":\"f08d44ee-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人石超饮酒、吸食毒品后，因琐事持刀行凶，故意非法剥夺他人生命，致二人死亡、一人轻伤，其行为已构成故意杀人罪。犯罪手段残忍，情节、后果特别严重，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-03-25\",\"案件名称\":\"石超故意杀人死刑复核刑事裁定书\",\"文书ID\":\"eff41ee8-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"案件类型\":\"1\",\"裁判日期\":\"2013-10-31\",\"案件名称\":\"吴道凤故意杀人死刑复核刑事裁定书\",\"文书ID\":\"9dd14db5-2326-4120-ab7a-2a210b0af043\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人王小军故意非法剥夺他人生命，其行为已构成故意杀人罪。王小军曾因犯罪被判处刑罚，刑满释放后不思悔改，又先后两次故意杀人作案，杀死一人，致一人重伤，足见其主观恶性深，人身危险性大，犯罪情节特别恶劣，犯罪后果和罪行极其严重，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-07-15\",\"案件名称\":\"王小军故意杀人死刑复核刑事裁定书\",\"文书ID\":\"f05b8b81-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人李新功奸淫不满十四周岁的幼女，以及违背妇女意志，采用暴力手段强行与妇女发生性关系的行为均已构成强奸罪；猥亵不满十四周岁的幼女的行为又构成猥亵儿童罪，应依法予以并罚。李新功指使未成年人为其寻找犯罪对象，强奸、奸淫幼女多人，情节恶劣并造成了其他严重后果，还猥亵幼女，社会影响恶劣，危害极大，均应依法惩处。第一审判决、第二审裁定除原判认定的第二起事实外，其余认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用＜中华人民共和国刑事诉讼法＞的解释》第三百五十条第（二）项的规定，判决如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-04-12\",\"案件名称\":\"李新功强奸、猥亵儿童死刑复核刑事判决书\",\"文书ID\":\"efea2774-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人王青志以非法占有为目的，采取暴力手段劫取他人财物，其行为已构成抢劫罪。王青志经预谋后入户抢劫，抢劫数额巨大，并致二人死亡，犯罪性质恶劣，手段残忍，情节、后果特别严重，社会危害性极大，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用＜中华人民共和国刑事诉讼法＞的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-02-25\",\"案件名称\":\"王青志抢劫死刑复核刑事裁定书\",\"文书ID\":\"eff7f53c-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人罗浩敏因赌博欠债，将自己多套经济适用房变卖后，又以申请廉租房为由纠缠他人，并为采取极端行为作了精心准备，以胁迫和暴力手段劫取他人财物，其行为已构成抢劫罪；遭到反抗后实施爆炸并持刀行凶，致一人死亡、一人轻微伤，其行为构成故意杀人罪，应予并罚。犯罪性质恶劣，动机卑劣，情节、后果特别严重，社会危害性极大，应依法惩处。罗浩敏虽主动投案，但所犯罪行极其严重，不足以从轻处罚。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-12-20\",\"案件名称\":\"罗浩敏故意杀人、抢劫死刑复核刑事裁定书\",\"文书ID\":\"f096e352-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人乐永飞因犯故意杀人罪，被判处死刑缓期二年执行，剥夺政治权利终身。在死刑缓期执行期间，乐永飞因琐事持木棍击打黄某某头部，致黄某某轻伤，其行为已构成故意伤害罪。乐永飞在死刑缓期执行期间又故意犯罪，经查证属实，依法应执行死刑。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百五十条第二款和《最高人民法院关于适用\u003c中华人民共和国刑事诉讼法\u003e的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-03-15\",\"案件名称\":\"乐永飞死刑缓期执行期间又犯故意伤害罪死刑复核刑事裁定书\",\"文书ID\":\"f06ab91c-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人许留军在实施盗窃过程中，为了抗拒抓捕，致被害人死亡，其行为已构成抢劫罪。许留军抢劫犯罪致人死亡，情节特别恶劣，罪行极其严重，无法定或酌定从轻处罚情节，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用\u003c中华人民共和国刑事诉讼法\u003e的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-09-26\",\"案件名称\":\"许留军抢劫死刑复核案刑事裁定书\",\"文书ID\":\"f0750746-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"},{\"裁判要旨段原文\":\"本院认为，被告人马哈买提江·达吾来提故意非法剥夺他人生命，故意伤害他人身体（致人死亡），还以非法占有为目的使用暴力劫取、秘密窃取他人财物，违反出入境管理而偷越国境，其行为已分别构成故意杀人罪、故意伤害罪、抢劫罪、盗窃罪和偷越国境罪，应依法数罪并罚。马哈买提江·达吾来提故意杀人致死四人，故意伤害致死一人，抢劫致二人重伤，其中入户抢劫一次，盗窃财物数额巨大，犯罪后为逃避刑罚而偷越国境。马哈买提江·达吾来提抢劫犯罪虽有自首情节，且其主动交代一起杀人犯罪事实，对其抢劫、故意杀人二起犯罪可从轻处罚，但其所犯故意杀人罪情节特别恶劣，手段特别残忍，罪行极其严重，社会危害性极大，不足以对其从轻处罚，应依法惩处。第一审判决、第二审裁定认定的事实清楚，证据确实、充分，定罪准确，量刑适当。审判程序合法。依照《中华人民共和国刑事诉讼法》第二百三十五条、第二百三十九条和《最高人民法院关于适用〈中华人民共和国刑事诉讼法〉的解释》第三百五十条第（一）项的规定，裁定如下\",\"案件类型\":\"1\",\"裁判日期\":\"2013-03-20\",\"案件名称\":\"马哈买提江·达吾来提故意杀人、故意伤害、抢劫、盗窃、偷越国境死刑复核案刑事裁定书\",\"文书ID\":\"f074f302-b647-11e3-84e9-5cf3fc0c2c18\",\"审判程序\":\"其他\",\"案号\":\"无\",\"法院名称\":\"最高人民法院\"}]"
+
+Process finished with exit code 0
+"""
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 """
 124.16.136.100估计是被封了，10次里有8次查不出来. 更换到其他网络（手机4G网络）速度很快
 
