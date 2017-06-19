@@ -71,6 +71,7 @@ class CJODocIDSpider_New():
         def get_cookie(self):
         这里直接是通过这个函数获取到网页的源代码, 这个函数可以作为TASKS_HASH的get_cookie()函数
         """
+        print("in get_doc_id_detail().")
         try:
             driver = self.get_chrome_driver()
             if not driver:
@@ -99,6 +100,7 @@ class CJODocIDSpider_New():
         """
 
     def process_page_source(self, doc_id, page_source):
+        print("in process_page_source().")
         if "<title>502</title>" in page_source:
             return
         elif "remind" in page_source:
@@ -125,7 +127,7 @@ class CJODocIDSpider_New():
                 pool_process = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
                 redis_uri_process = redis.Redis(connection_pool=pool_process)
                 redis_key_process = "DOC_ID_HASH"
-                redis_uri_process.hset(redis_key_process, doc_id, "-1")  # Success 只有成功是需要设置的，不成功的不需要设置
+                # redis_uri_process.hset(redis_key_process, doc_id, "-1")  # Success 只有成功是需要设置的，不成功的不需要设置
         except Exception as e:
             self.error_logger.error("lxw_Exception_NOTE: {0}. page_source: {1}\n{2}\n\n".format(e, page_source, "--"*30))
 
