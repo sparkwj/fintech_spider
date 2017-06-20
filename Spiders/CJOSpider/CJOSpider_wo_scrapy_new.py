@@ -33,11 +33,14 @@ Each instance of the program should spawn its own ConnectionPool.
 "a72c6c87-d7ef-44a7-b5d1-a75100f91467"
 """
 
+import json
 import multiprocessing
 import os
 import pymongo
+import random
 import re
 import redis
+import requests
 from selenium import webdriver
 import sys
 # import time
@@ -63,14 +66,14 @@ from Spiders.CJOSpider.utils import generate_logger
 class CJOSpider_New():
     """
     w/o Scrapy.
-    裁判文书网改版后，爬取策略无法直接使用 Selenium直接爬取doc_id案件详情信息
+    裁判文书网改版后，爬取策略无法直接使用
+    Selenium直接爬取doc_id案件详情信息
     """
-    error_logger = generate_logger("new_cjodocid_error")
+    error_logger = generate_logger("new_cjo_error")
     proxies = {}
     TIMEOUT = 120
     # headers = {"Host": "wenshu.court.gov.cn"}      # need Host, Referer, User-Agent. the latter two keys will be add below.
     url_prefix = "http://wenshu.court.gov.cn/content/content?DocID="
-    js_url_prefix = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID="
 
     # 应该每个进程单独创建ConnectionPool(这儿的只有主进程可以使用)
     pool = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
@@ -82,11 +85,12 @@ class CJOSpider_New():
         "1c83095f-396a-442c-831b-a74500f0e6ae", "5b19caf4-3858-4796-b241-a74500f0e702"
     ]
 
+    cases_per_page = 20
+
     def get_chrome_driver(self):
+        # chromedriver
         options = webdriver.ChromeOptions()
-        # TODO: proxy
         proxy = get_proxy()
-        # proxy = "120.26.215.154:3128"
         # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
         self.proxies["http"] = proxy
         self.proxies["https"] = proxy
@@ -94,13 +98,26 @@ class CJOSpider_New():
             options.add_argument('--proxy-server=' + proxy)
         else:
             return None    # proxy is essential
-        """
-        """
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver", chrome_options=options)
+        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
+
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)
         driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
         return driver
+
+    def get_cookie_by_selenium(self):
+        driver = self.get_chrome_driver()
+        driver.implicitly_wait(60)
+        driver.get(self.url_prefix + random.choice(self.doc_id_list))
+        driver.find_element_by_class_name("content_main")
+        cookie_list = driver.get_cookies()
+        cookie_str_list = []
+        for cookie_dict in cookie_list:
+            cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
+        cookie_str = " ".join(cookie_str_list)
+        print("Cookie str:", cookie_str)
+        driver.quit()
+        return cookie_str
 
     def test_proxy(self):
         driver = self.get_chrome_driver()
@@ -108,94 +125,126 @@ class CJOSpider_New():
         driver.get("http://xiujinniu.com/xiujinniu/index.php")
         print(driver.page_source)
 
-    def get_doc_id_detail(self, doc_id):
-        """
-        def get_cookie(self):
-        这里直接是通过这个函数获取到网页的源代码, 这个函数可以作为TASKS_HASH的get_cookie()函数
-        """
-        try:
-            driver = self.get_chrome_driver()
-            if not driver:
-                return
-            driver.implicitly_wait(60)
-            url = self.url_prefix + doc_id
-            driver.get(url)
-            driver.find_element_by_class_name("content_main")
-            url = self.js_url_prefix + doc_id    # 直接访问js_url_prefix + doc_id是不行的，必须得先访问url_prefix + doc_id得到Cookie后再访问js_url_prefix + doc_id
-            driver.get(url)
-            driver.find_element_by_xpath("/html/body")
-            # return driver.page_source
-            self.process_page_source(doc_id, driver.page_source)
-        except Exception as e:
-            self.error_logger.error("lxw Exception: {0}\ndocid: {1}\n{2}\n\n".format(e, doc_id, "--"*30))
-        """
-        cookie_list = driver.get_cookies()
-        cookie_str_list = []
-        for cookie_dict in cookie_list:
-            cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
-        cookie_str = " ".join(cookie_str_list)
-        print("Cookie str:", cookie_str)
-        time.sleep(3)
-        driver.quit()
-        return cookie_str
-        """
-
-    def process_page_source(self, doc_id, page_source):
-        if "<title>502</title>" in page_source:
-            return
-        elif "remind" in page_source:
-            return
-
-        try:
-            json_data = ""
-            match_result = re.finditer(r"jsonHtmlData.*?jsonData", page_source, re.S)
-            for m in match_result:
-                data = m.group(0)
-                right_index = data.rfind("}")
-                left_index = data.find("{")
-                json_data = data[left_index + 1:right_index]
-                break  # this is essential. Only the first match is what we want.
-            if json_data == "":
-                self.error_logger.error("doc_id: {0}. re.finditer() got nothing. page_source: {1}\n{2}\n\n".format(doc_id, page_source, "--"*30))
-            else:   # Success
-                case_details_json = "\"{" + json_data + "}\""
-                cjo_docid_dict = {}
-                cjo_docid_dict["doc_id"] = doc_id
-                cjo_docid_dict["case_details_json"] = case_details_json
-                self.into_mongo(cjo_docid_dict)
-                # 每个进程单独创建ConnectionPool
-                pool_process = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
-                redis_uri_process = redis.Redis(connection_pool=pool_process)
-                redis_key_process = "DOC_ID_HASH"
-                redis_uri_process.hset(redis_key_process, doc_id, "-1")  # Success 只有成功是需要设置的，不成功的不需要设置
-        except Exception as e:
-            self.error_logger.error("lxw_Exception_NOTE: {0}. page_source: {1}\n{2}\n\n".format(e, page_source, "--"*30))
-
     def into_mongo(self, data_dict):
         print("data_dict:", data_dict)
         conn = pymongo.MongoClient("192.168.1.36", 27017)
         db = conn.scrapy    # dbname: scrapy
-        db["cjo_docid_0618"].insert(data_dict)
+        db["cjo0620"].insert(data_dict)
+
+    def crawl_basic_info(self, cookie_str):
+        if not cookie_str:
+            return
+        url = "http://wenshu.court.gov.cn/List/ListContent"
+        data = {
+            # "Param": "案件类型:刑事案件,裁判日期:2017-04-01 TO 2017-04-01,法院层级:高级法院", # OK
+            "Param": "案件类型:刑事案件",   # OK: 4875654
+            # "Param": "裁判日期:1996-01-10 TO 1996-01-10",# "1996-01-10": 1, "1996-02-07": 1
+            "Index": 1,   # NOTE: 还是只能爬取前100页的数据, 超过100页的爬取不到
+            "Page": self.cases_per_page,
+            "Order": "法院层级",
+            "Direction": "asc",
+        }
+
+        s = requests.Session()
+
+        try:
+            headers = {
+                "Host": "wenshu.court.gov.cn",
+                "Referer": "http://wenshu.court.gov.cn/List/List",
+                "Cookie": cookie_str
+            }
+            # print("headers", headers)
+            req = requests.Request("POST", url=url, data=data, headers=headers)
+            prepped = s.prepare_request(req)
+            proxy = get_proxy()
+            proxies = {
+                "http": proxy,
+                "https": proxy,
+            }
+            response = s.send(prepped, proxies=proxies, timeout=60)
+            # response = s.send(prepped, timeout=60)    # NOTE: 没有使用代理(或者是使用其他的代理)，都可以通过Cookie直接爬取，这就意味着反爬信息完全依赖Cookie来实现
+        except Exception as e:
+            print("lxw_Exception", e)
+        else:
+            print(response.text)
+
+    def crawl_by_post(self, cookie_str, param, index, code, category):
+        """
+        :param param: "POST" parameters
+        :param index: page number (MUST BE INTEGER)
+        :param code: company code
+        :param category: abbr_single/abbr/full (abbr_single: 简称in全称; abbr: 使用简称; full: 使用全称)
+        # :param flag_code: flag_code to be transported to middlewares.
+        :return: 
+        """
+        if not cookie_str:
+            return
+        post_data = {
+            # "Param": "案件类型:刑事案件,法院层级:高级法院",
+            "Param": param,
+            "Index": repr(index),
+            "Page": repr(self.cases_per_page),
+            "Order": "法院层级",
+            "Direction": "asc",
+        }
+
+        url = "http://wenshu.court.gov.cn/List/ListContent"
+        data = {
+            # "Param": "案件类型:刑事案件,裁判日期:2017-04-01 TO 2017-04-01,法院层级:高级法院", # OK
+            "Param": "案件类型:刑事案件",   # OK: 4875654
+            # "Param": "裁判日期:1996-01-10 TO 1996-01-10",# "1996-01-10": 1, "1996-02-07": 1
+            "Index": 1,   # NOTE: 还是只能爬取前100页的数据, 超过100页的爬取不到
+            "Page": self.cases_per_page,
+            "Order": "法院层级",
+            "Direction": "asc",
+        }
+
+        s = requests.Session()
+
+        try:
+            headers = {
+                "Host": "wenshu.court.gov.cn",
+                "Referer": "http://wenshu.court.gov.cn/List/List",
+                "Cookie": cookie_str
+            }
+            # print("headers", headers)
+            req = requests.Request("POST", url=url, data=data, headers=headers)
+            prepped = s.prepare_request(req)
+            proxy = get_proxy()
+            proxies = {
+                "http": proxy,
+                "https": proxy,
+            }
+            response = s.send(prepped, proxies=proxies, timeout=60)
+            # response = s.send(prepped, timeout=60)    # NOTE: 没有使用代理(或者是使用其他的代理)，都可以通过Cookie直接爬取，这就意味着反爬信息完全依赖Cookie来实现
+        except Exception as e:
+            print("lxw_Exception", e)
+        else:
+            print(response.text)
+        return
 
     def operate(self):
         count = 0
         continue_flag = True
         while continue_flag:
             continue_flag = False
-            pool = multiprocessing.Pool(processes=1)    # IP代理数目是6, 所以这里把进程数目也设置为6
+            pool = multiprocessing.Pool(processes=1)    # TODO: IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
-                # print(type(item), item)    # <class 'tuple'> (b'd6613396-b7d1-4199-ae4e-b3b36fdd7fda', b'0')
-                doc_id = item[0].decode("utf-8")
-                flag = int(item[1].decode("utf-8"))  # {0: initial value;    -1: Done;    >0: timestamp}
-
-                if flag != -1:    # 没有执行成功
+                print(type(item), item)    # <class 'tuple'> (b'{"Param": "\\u5f53\\u4e8b\\u4eba:\\u5927\\u667a\\u6167", "Index": "1", "case_parties": "601519", "abbr_full_category": "abbr_single"}', b'0')
+                left_right = item[1].decode("utf-8").split("_")
+                flag_code = int(left_right[0])  # we only care about left_right[0]
+                if flag_code >= 0:    # 未请求或未请求成功    # {0: 初始值, 未爬取;    负值: 爬取成功;    > 0: 未爬取成功, 爬取的次数;}
                     continue_flag = True
-                    pool.apply_async(self.get_doc_id_detail, (doc_id,))
+                    data_dict_str = item[0].decode("utf-8")
+                    data_dict = json.loads(data_dict_str)
+                    yield self.yield_formrequest(data_dict["Param"], int(data_dict["Index"]), data_dict["case_parties"], data_dict["abbr_full_category"], flag_code)
+                    # TODO: pool.apply_async(self.get_doc_id_detail, (doc_id,))
 
             pool.close()
             pool.join()
             print("第{0}轮执行完成.".format(count))
             count += 1
+
 
 if __name__ == "__main__":
     cjo = CJOSpider_New()
