@@ -35,6 +35,7 @@ class CheckRedis:
         print("success_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
         # 20170614_1510
         # success_count: 175612, zero_count: 655719, timeout_count: 123040
+        # success_count: 181708, zero_count: 648781, timeout_count: 129528
 
     def check_tasks_redis(self):
         success_count = 0
@@ -68,6 +69,8 @@ class CheckRedis:
         # 20170614_1510
         # success_count: 51585, zero_count: 6277, timeout_count: 22934
         # success_1_count: 48445, success_2_count: 2736, success_3_count: 404
+        # success_count: 51954, zero_count: 12791, timeout_count: 16288
+        # success_1_count: 48802, success_2_count: 2747, success_3_count: 405
 
     def check_cnki_redis(self):
         success_count = 0
@@ -86,6 +89,7 @@ class CheckRedis:
                 print("[error] url:", url)
         print("success_count: {0}, zero_count: {1}, error_count: {2}".format(success_count, zero_count, error_count))
         # 20170614_1510 success_count: 111640, zero_count: 8642, error_count: 0
+        # 20170620_0953 success_count: 134161, zero_count: 8115, error_count: 0
 
 
 if __name__ == "__main__":

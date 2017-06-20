@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-#File Name: cjo_docid_test.py
+#File Name: new_cjo_spider_test.py
 #Author: lxw
 #Date: Fri 16 Jun 2017 11:20:45 AM CST
 
@@ -9,6 +9,7 @@ import requests
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.proxy import ProxyType
 import time
 from fake_useragent import UserAgent
 
@@ -37,17 +38,29 @@ class NewCJOSpider:
     url = "http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=" + doc_id
 
     def get_driver_chrome(self):
+        # chromedriver
         options = webdriver.ChromeOptions()
         proxy = get_proxy()
-        # proxy = "111.13.2.131:80"
         # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
         self.proxies["http"] = proxy
         self.proxies["https"] = proxy
         if proxy:
             options.add_argument('--proxy-server=' + proxy)
         driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
-        # driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedirver_selenium/chromedriver")
-        # driver = webdriver.PhantomJS(executable_path=r"/home/lxw/Downloads/phantomjs/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")
+        
+        """
+        # PhantomJS: Not working. why?
+        driver = webdriver.PhantomJS(executable_path=r"/home/lxw/Downloads/phantomjs/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")
+        proxy = webdriver.Proxy()
+        proxy.proxy_type = ProxyType.MANUAL
+        proxy_str = get_proxy()
+        if proxy_str:
+            proxy.http_proxy = proxy_str
+        # 将代理设置添加到webdriver.DesiredCapabilities.PHANTOMJS中
+        proxy.add_to_capabilities(webdriver.DesiredCapabilities.PHANTOMJS)
+        driver.start_session(webdriver.DesiredCapabilities.PHANTOMJS)
+        """
+
         # 设置超时时间
         driver.set_page_load_timeout(self.TIMEOUT)
         driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
@@ -62,13 +75,15 @@ class NewCJOSpider:
     def get_cookie_by_selenium(self):
         driver = self.get_driver_chrome()
         driver.implicitly_wait(60)
-        driver.get(self.parent_url)
-        driver.find_element_by_class_name("content_main")
-        # todo: self.index_url OK?
         """
+        driver.get(self.parent_url)
+        # driver.get("http://xiujinniu.com/xiujinniu/index.php")
+        driver.find_element_by_class_name("content_main")
+        """
+        # self.index_url is OK, 得到的Cookie和通过访问doc_id得到的Cookie形式是一样的，并且能够正确获取到所需要的数据
         driver.get(self.index_url)
         driver.find_element_by_id("nav")
-        """
+        # driver.find_element_by_xpath("/html/body")
         # print(driver.page_source)
         cookie_list = driver.get_cookies()
         cookie_str_list = []
@@ -80,7 +95,10 @@ class NewCJOSpider:
         driver.quit()
         return cookie_str
 
-    def get_cookie_by_requests(self):
+    def get_cookie_by_requests(self):   # NO
+        """
+        NOTE: 下面的Cookie伪造不行， 因为Cookie中还有几个其他的字段不知道是怎么构造的
+        """
         proxy = get_proxy()
         proxies = {}
         proxies["http"] = proxy
@@ -95,7 +113,7 @@ class NewCJOSpider:
             cookie_list.append("{0}={1};".format(key, value))
         cookie_str = " ".join(cookie_list)
         print(cookie_str)
-        # 通过index_url获取到的Cookie是不全的，必须通过
+        # 通过index_url获取到的Cookie是不全的，必须通过访问doc_id详情页面获取Cookie
 
         # 可用的Cookie形式如下：
         print("---------\n", "FSSBBIl1UgzbN7N80T=1BxDCAWQIuPmHXsTUT6xDtENw.icd8kyKJHvxblMsefOynmCogIlM7EImGahnmKpyF.gi4T16wvKKvoU7OJucbYbo5cX888YPTOyARuSz.J6CfeDMhiQFBaLI01rIhcABy9UfdFFPl63x8O5tR2.KRBpmWleFac.3IbYE4s3nklAEMegCVnhMXlNBDTcBYAy29.3iJkkpAnuBnEXHCUfdGViS0GWDIBq6_rmGt79OxxveWCgM4jHlBh1jOnQ37x8x2s6CyauK1J3TS9TDIy_5MOkfdNEvGISbMdsb_JcFHtIUuCZ7stB41qe6svK_iELhs5V; _gscs_2116842793=978637234xxwv013|pv:1; _gscu_2116842793=978637233f0ihw13; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=rSE4ZY4eEGNUDbJKn2Kn.MXUf5FU9Bnazz_tnfUvrIVFiCqA4iVYVmw5P2347Sd.;")
@@ -164,16 +182,12 @@ class NewCJOSpider:
 
 if __name__ == '__main__':
     spider = NewCJOSpider()
-    cookie_str = spider.get_cookie_by_requests()
-    spider.crawl_doc_id_content(cookie_str)
-    # spider.crawl_basic_info(cookie_str)
     # spider.test_proxy()
-    # NOTE: cookie 没法重复使用，只能多使用一次
-    """
-    cookie_str = spider.get_cookie_by_selenium()
+    # NOTE: cookie 没法重复使用(访问某个页面后，把cookie_str拷贝出来，立即访问其他页面就不行，但在程序中直接使用就可以)
+    cookie_str = spider.get_cookie_by_selenium()    # OK
+    # NO # cookie_str = "FSSBBIl1UgzbN7N80T=1zd9Go1xqkzybCXXMDpo6mUcXgYxfpfisjHwS_WM3zz0Qn4h39nfW.Grms9W3Iu75e86teCNWaI8AwussIXb3NDHN85dg1_PH.A9hFxSw3kEK5ID0wt6TnklqLe83OHdf2iugi0_bEdH3vK7Q0OH14qDIH6RUPhRTXTKPejV2xVf7Y2jwjj_VMf3dvnZ1sEG8LBhM76idLbYWHKnDlI_b8TO7fuiwCJ3QBcYFbVwm96KtV.cK6Y85gGZxvF7Sn0KX.dUpsQOH0F41vGHE7V.kE8CJMwUsTtNc3L0s4BDTfcR0Uq; _gscs_2116842793=97924849d2pere98|pv:1; _gscu_2116842793=97924849igk2mr98; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497924849; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497924849; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=g46T.qSv48zDjMZuQa9uhwdU.PThlezspRI3ozIyTlN864f6G2Ra72EC6Z2QiZ4b;"
     spider.crawl_doc_id_content(cookie_str)
     spider.crawl_basic_info(cookie_str)
-    """
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,7 +204,7 @@ if __name__ == '__main__':
     spider.crawl_basic_info(cookie_str)
     
 Process finished with exit code 0
-/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/cjo_docid_test.py
+/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/new_cjo_spider_test.py
 Using IP proxy: 119.5.77.211:23032
 Cookie str: FSSBBIl1UgzbN7N80T=1BxDCAWQIuPmHXsTUT6xDtENw.icd8kyKJHvxblMsefOynmCogIlM7EImGahnmKpyF.gi4T16wvKKvoU7OJucbYbo5cX888YPTOyARuSz.J6CfeDMhiQFBaLI01rIhcABy9UfdFFPl63x8O5tR2.KRBpmWleFac.3IbYE4s3nklAEMegCVnhMXlNBDTcBYAy29.3iJkkpAnuBnEXHCUfdGViS0GWDIBq6_rmGt79OxxveWCgM4jHlBh1jOnQ37x8x2s6CyauK1J3TS9TDIy_5MOkfdNEvGISbMdsb_JcFHtIUuCZ7stB41qe6svK_iELhs5V; _gscs_2116842793=978637234xxwv013|pv:1; _gscu_2116842793=978637233f0ihw13; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=rSE4ZY4eEGNUDbJKn2Kn.MXUf5FU9Bnazz_tnfUvrIVFiCqA4iVYVmw5P2347Sd.;
 Using IP proxy: 122.236.166.99:56671
@@ -224,7 +238,7 @@ Process finished with exit code 0
 124.16.136.100估计是被封了，10次里有8次查不出来. 更换到其他网络（手机4G网络）速度很快
 
 20170618 23:10 Output:
-/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/cjo_docid_test.py
+/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/new_cjo_spider_test.py
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="X-UA-Compatible" content="IE=8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" /><title>
 	
         王某容留他人吸毒罪一审刑事判决书
