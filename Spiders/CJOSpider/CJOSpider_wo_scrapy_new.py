@@ -73,7 +73,6 @@ class CJOSpider_New():
     """
     error_logger = generate_logger("new_cjo_error")
     exceed_crawl_limit_logger = generate_output_logger("new_CJOSpiderExceedCrawlLimit")
-    proxies = {}
     TIMEOUT = 120
     url_prefix = "http://wenshu.court.gov.cn/content/content?DocID="
     url = "http://wenshu.court.gov.cn/List/ListContent"
@@ -105,9 +104,6 @@ class CJOSpider_New():
         # chromedriver
         options = webdriver.ChromeOptions()
         proxy = get_proxy()
-        # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
-        self.proxies["http"] = proxy
-        self.proxies["https"] = proxy
         if proxy:
             options.add_argument('--proxy-server=' + proxy)
         else:
@@ -134,7 +130,7 @@ class CJOSpider_New():
             for cookie_dict in cookie_list:
                 cookie_str_list.append("{0}={1};".format(cookie_dict["name"], cookie_dict["value"]))
             cookie_str = " ".join(cookie_str_list)
-            print("Cookie str:", cookie_str)
+            # print("Cookie str:", cookie_str)
         except Exception as e:
             self.error_logger.error("lxw get_cookie_by_selenium Exception: {0}\n{1}\n\n".format(e, "--"*30))
             return ""
@@ -325,6 +321,10 @@ class CJOSpider_New():
             conn = pymongo.MongoClient("192.168.1.36", 27017)
             db = conn.scrapy    # dbname: scrapy
             result_dict = {}
+
+            pool_docid = redis.ConnectionPool(host="192.168.1.29", port=6379, db=0)
+            redis_uri_docid = redis.Redis(connection_pool=pool_docid)
+            redis_key_docid = "DOC_ID_HASH"
             for case_dict in text_list[1:]:
                 """
                 case_dict: {'裁判要旨段原文': '本院认为，被告人王某为他人吸食毒品提供场所，其行为已构成容留他人吸毒罪，依法应予惩处。泰兴市人民检察院对被告人王某犯容留他人吸毒罪的指控成立，本院予以支持。被告人王某自动投案并如实供述自己的罪行，是自首，依法可以从轻处罚。被告人王某具有犯罪前科和多次吸毒劣迹，可酌情从重处罚。被告人王某主动向本院缴纳财产刑执行保证金，可酌情从轻处罚。关于辩护人提出“被告人王某具有自首、主动缴纳财产刑执行保证金等法定和酌定从轻处罚的情节，建议对被告人王某从轻处罚”的辩护意见，经查属实，本院予以采纳。依照《中华人民共和国刑法》第三百五十四条、第三百五十七条第一款、第六十七条第一款之规定，判决如下', '不公开理由': '', '案件类型': '1', '裁判日期': '2017-02-21', '案件名称': '王某容留他人吸毒罪一审刑事判决书', '文书ID': 'f42dfa1f-b5ca-4a22-a416-a74300f61906', '审判程序': '一审', '案号': '（2017）苏1283刑初44号', '法院名称': '江苏省泰兴市人民法院'}
@@ -345,9 +345,9 @@ class CJOSpider_New():
                 # 但"发出请求"(在各个Middlewares中)时, crawl_date不能加到POST数据中;
                 # 也不能以"产生请求"的时间代替, 因为产生请求的时间,并不一定发出该请求
                 # 因此相比之下, 得到响应的时间与真正发出请求的时间更近
-                self.into_mongo(db, result_dict)
+                self.into_mongo(db, result_dict, redis_uri_docid, redis_key_docid)
             # self.actual_output_logger.info(json.dumps(data, ensure_ascii=False))  # 记录所有成功抓取并入库的
-            # redis_uri_process.hset(redis_key_process, redis_data_str, "-1_0")     # [抓取完成] 正确抓取到所需要的数据
+            redis_uri_process.hset(redis_key_process, redis_data_str, "-1_0")     # [抓取完成] 正确抓取到所需要的数据
 
         except json.JSONDecodeError as jde:
             if "<title>502</title>" in text:
@@ -422,7 +422,7 @@ class CJOSpider_New():
         }
         # name = json.dumps(data, ensure_ascii=False)   # utf-8
         name = json.dumps(data)  # unicode
-        print(name)     # TODO: check name
+        # print(name)
         redis_uri.hset(redis_key, name, "0_0")    # left_right. Only care about "left".
         """
         TASKS_HASH
@@ -430,9 +430,12 @@ class CJOSpider_New():
         -1: 爬取成功
         """
 
-    def into_mongo(self, db, data_dict):
+    def into_mongo(self, db, data_dict, redis_uri, redis_key):
         print("data_dict:", data_dict)
         db["cjo0620"].insert(data_dict)
+
+        if not redis_uri.hexists(redis_key, data_dict.get("doc_id", "0")):  # 如果不存在
+            redis_uri.hset(redis_key, data_dict.get("doc_id", "0"), 0)
 
     def crawl_basic_info(self, param, index, case_parties, category):
         """
@@ -460,7 +463,7 @@ class CJOSpider_New():
         continue_flag = True
         while continue_flag:
             continue_flag = False
-            pool = multiprocessing.Pool(processes=1)    # TODO: IP代理数目是6, 所以这里把进程数目也设置为6
+            pool = multiprocessing.Pool(processes=6)    # IP代理数目是6, 所以这里把进程数目也设置为6
             for item in self.redis_uri.hscan_iter(self.redis_key):
                 # print(type(item), item)    # <class 'tuple'> (b'{"Param": "\\u5f53\\u4e8b\\u4eba:\\u4e2d\\u56fd\\u77f3\\u6cb9\\u5316\\u5de5\\u80a1\\u4efd\\u6709\\u9650\\u516c\\u53f8", "Index": "12", "case_parties": "600028", "abbr_full_category": "full"}', b'-1_0'
                 left_right = item[1].decode("utf-8").split("_")
@@ -475,7 +478,6 @@ class CJOSpider_New():
             pool.join()
             print("第{0}轮执行完成.".format(count))
             count += 1
-            break
 
 
 if __name__ == "__main__":
