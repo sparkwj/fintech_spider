@@ -431,11 +431,14 @@ class CJOSpider_New():
         """
 
     def into_mongo(self, db, data_dict, redis_uri, redis_key):
-        print("data_dict:", data_dict)
-        db["cjo0620"].insert(data_dict)
+        try:
+            print("data_dict:", data_dict)
+            db["cjo0620"].insert(data_dict)
 
-        if not redis_uri.hexists(redis_key, data_dict.get("doc_id", "0")):  # 如果不存在
-            redis_uri.hset(redis_key, data_dict.get("doc_id", "0"), 0)
+            if not redis_uri.hexists(redis_key, data_dict.get("doc_id", "0")):  # 如果不存在
+                redis_uri.hset(redis_key, data_dict.get("doc_id", "0"), 0)
+        except Exception as e:
+            self.error_logger.critical("lxw_Exception_NOTE:{0}\ndata_dict: {1}\n{2}\n\n".format(e, json.dumps(data_dict), "--"*30))
 
     def crawl_basic_info(self, param, index, case_parties, category):
         """
