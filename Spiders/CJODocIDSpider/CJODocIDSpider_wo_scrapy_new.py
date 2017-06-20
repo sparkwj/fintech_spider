@@ -89,6 +89,7 @@ class CJODocIDSpider_New():
         这里直接是通过这个函数获取到网页的源代码, 这个函数可以作为TASKS_HASH的get_cookie()函数
         """
         # print("in get_doc_id_detail().")
+        driver = None
         try:
             driver = self.get_chrome_driver()
             if not driver:
@@ -105,7 +106,8 @@ class CJODocIDSpider_New():
         except Exception as e:
             self.error_logger.error("lxw Exception: {0}\ndocid: {1}\n{2}\n\n".format(e, doc_id, "--"*30))
         finally:
-            driver.quit()
+            if driver:
+                driver.quit()
         """
         cookie_list = driver.get_cookies()
         cookie_str_list = []

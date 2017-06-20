@@ -91,10 +91,22 @@ class CheckRedis:
         # 20170614_1510 success_count: 111640, zero_count: 8642, error_count: 0
         # 20170620_0953 success_count: 134161, zero_count: 8115, error_count: 0
 
+    def check_tasks(self):
+        with open("./result.md", "w") as f:
+            for item in self.REDIS_URI.hscan_iter(self.REDIS_KEY_TASKS):
+                # print(type(item), item)    # <class 'tuple'> (b'{"Param": "\\u5f53\\u4e8b\\u4eba:\\u4e2d\\u56fd\\u77f3\\u6cb9\\u5316\\u5de5\\u80a1\\u4efd\\u6709\\u9650\\u516c\\u53f8", "Index": "12", "case_parties": "600028", "abbr_full_category": "full"}', b'-1_0'
+                task = item[0].decode("utf-8")
+                left_right = item[1].decode("utf-8")
+                if left_right == "0_0":
+                    f.write("{0}\t{1}\n".format(task, left_right))
+                if '{"Param": "\u5f53\u4e8b\u4eba:\u592a\u5e73\u6d0b,\u6848\u4ef6\u7c7b\u578b:\u6c11\u4e8b\u6848\u4ef6,\u6cd5\u9662\u5c42\u7ea7:\u57fa\u5c42\u6cd5\u9662,\u88c1\u5224\u65e5\u671f:2014-12-30 TO 2014-12-30", "Index": "2", "case_parties": "601099", "abbr_full_category": "abbr_single"}' in task:
+                    print(task, left_right)
+
 
 if __name__ == "__main__":
     cr = CheckRedis()
-    cr.check_doc_id_redis()
-    cr.check_tasks_redis()
-    cr.check_cnki_redis()
+    # cr.check_doc_id_redis()
+    # cr.check_tasks_redis()
+    # cr.check_cnki_redis()
+    cr.check_tasks()
 
