@@ -4,6 +4,7 @@
 #Author: lxw
 #Date: Fri 16 Jun 2017 11:20:45 AM CST
 
+from pyvirtualdisplay import Display
 import random
 import requests
 from selenium import webdriver
@@ -46,6 +47,9 @@ class NewCJOSpider:
         self.proxies["https"] = proxy
         if proxy:
             options.add_argument('--proxy-server=' + proxy)
+
+        display = Display(visible=0, size=(800, 800))
+        display.start()
         driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
         
         """
@@ -182,6 +186,9 @@ class NewCJOSpider:
 
 if __name__ == '__main__':
     spider = NewCJOSpider()
+    spider.test_proxy()
+    exit(0)
+    print("After exit(0).")
     # spider.test_proxy()
     # NOTE: cookie 没法重复使用(访问某个页面后，把cookie_str拷贝出来，立即访问其他页面就不行，但在程序中直接使用就可以)
     cookie_str = spider.get_cookie_by_selenium()    # OK
