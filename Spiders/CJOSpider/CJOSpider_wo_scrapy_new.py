@@ -40,6 +40,7 @@ import json
 import multiprocessing
 import os
 import pymongo
+from pyvirtualdisplay import Display
 import random
 import re
 import redis
@@ -109,6 +110,8 @@ class CJOSpider_New():
             options.add_argument('--proxy-server=' + proxy)
         else:
             return None    # proxy is essential
+        display = Display(visible=0, size=(800, 800))
+        display.start()
         driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
 
         # 设置超时时间
