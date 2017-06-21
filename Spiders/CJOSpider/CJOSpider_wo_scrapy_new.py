@@ -47,6 +47,7 @@ import requests
 from selenium import webdriver
 import sys
 import time
+import traceback
 
 abspath = os.path.abspath(__file__)
 current_dir = os.path.dirname(abspath)
@@ -132,7 +133,7 @@ class CJOSpider_New():
             cookie_str = " ".join(cookie_str_list)
             # print("Cookie str:", cookie_str)
         except Exception as e:
-            self.error_logger.error("lxw get_cookie_by_selenium Exception: {0}\n{1}\n\n".format(e, "--"*30))
+            self.error_logger.error("lxw get_cookie_by_selenium Exception: {0}\n{1}\n{2}\n\n".format(e, traceback.format_exc(), "--"*30))
             return ""
         else:
             return cookie_str
@@ -177,7 +178,7 @@ class CJOSpider_New():
             response = s.send(prepped, proxies=proxies, timeout=60)
             # response = s.send(prepped, timeout=60)    # NOTE: 没有使用代理(或者是使用其他的代理)，都可以通过Cookie直接爬取，这就意味着反爬信息完全依赖Cookie来实现
         except Exception as e:
-            self.error_logger.error("lxw Exception: {0}\nparam: {1}\n{2}\n\n".format(e, param, "--"*30))
+            self.error_logger.error("lxw Exception(in crawl_by_post): {0}\n{1}\nparam: {2}\n{3}\n\n".format(e, traceback.format_exc(), param, "--"*30))
             return ""
         else:
             return response.text
@@ -356,11 +357,11 @@ class CJOSpider_New():
                 self.error_logger.error("Bad news: the website block the spider\n{0}\n\n".format("--"*30))
                 time.sleep(10)  # IP代理被禁用了，休息会儿等会儿新的代理
             else:
-                self.error_logger.error("lxw_JSONDecodeError_NOTE:{0}\ntext: {1}\n{2}\n\n".format(jde, text, "--"*30))
+                self.error_logger.error("lxw_JSONDecodeError_NOTE:{0}\ntext: {1}\n{2}\n\n".format(traceback.format_exc(), text, "--"*30))
             # 针对这些抓取不成功的case, 不用对redis做任何修改， 下次会再次重新抓取
             # self.into_redis(redis_uri_process, redis_key_process, data["Param"], int(data["Index"]), data["case_parties"], data["abbr_full_category"])   # 写 消息队列 Redis(TASKS_HASH)
         except Exception as e:
-            self.error_logger.error("lxw_Exception_NOTE:{0}\ntext: {1}\n{2}\n\n".format(e, text, "--"*30))
+            self.error_logger.error("lxw_Exception(process_response):{0}\n{1}\ntext: {2}\n{3}\n\n".format(e, traceback.format_exc(), text, "--"*30))
             # 针对这些抓取不成功的case, 不用对redis做任何修改， 下次会再次重新抓取
             # self.into_redis(redis_uri_process, redis_key_process, data["Param"], int(data["Index"]), data["case_parties"], data["abbr_full_category"])   # 写 消息队列 Redis(TASKS_HASH)
 
@@ -432,13 +433,16 @@ class CJOSpider_New():
 
     def into_mongo(self, db, data_dict, redis_uri, redis_key):
         try:
+            if "_id" in data_dict:
+                del data_dict["_id"]
             print("data_dict:", data_dict)
             db["cjo0620"].insert(data_dict)
+            # db["cjo0621"].insert(data_dict)    # 执行完这一步之后， data_dict的就已经被添加"_id"字段了
 
             if not redis_uri.hexists(redis_key, data_dict.get("doc_id", "0")):  # 如果不存在
                 redis_uri.hset(redis_key, data_dict.get("doc_id", "0"), 0)
         except Exception as e:
-            self.error_logger.critical("lxw_Exception_NOTE:{0}\ndata_dict: {1}\n{2}\n\n".format(e, json.dumps(data_dict), "--"*30))
+            self.error_logger.critical("lxw_Exception(into_mongo):{0}\n{1}\ndata_dict: {2}\n{3}\n\n".format(e, traceback.format_exc(), json.dumps(data_dict), "--"*30))
 
     def crawl_basic_info(self, param, index, case_parties, category):
         """
