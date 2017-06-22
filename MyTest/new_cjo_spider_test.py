@@ -211,7 +211,7 @@ if __name__ == '__main__':
     spider.crawl_basic_info(cookie_str)
     
 Process finished with exit code 0
-/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/new_cjo_spider_test.py
+/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/MyTest/new_cjo_spider_test.py
 Using IP proxy: 119.5.77.211:23032
 Cookie str: FSSBBIl1UgzbN7N80T=1BxDCAWQIuPmHXsTUT6xDtENw.icd8kyKJHvxblMsefOynmCogIlM7EImGahnmKpyF.gi4T16wvKKvoU7OJucbYbo5cX888YPTOyARuSz.J6CfeDMhiQFBaLI01rIhcABy9UfdFFPl63x8O5tR2.KRBpmWleFac.3IbYE4s3nklAEMegCVnhMXlNBDTcBYAy29.3iJkkpAnuBnEXHCUfdGViS0GWDIBq6_rmGt79OxxveWCgM4jHlBh1jOnQ37x8x2s6CyauK1J3TS9TDIy_5MOkfdNEvGISbMdsb_JcFHtIUuCZ7stB41qe6svK_iELhs5V; _gscs_2116842793=978637234xxwv013|pv:1; _gscu_2116842793=978637233f0ihw13; Hm_lpvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; Hm_lvt_3f1a54c5a86d62407544d433f6418ef5=1497863724; _gscbrs_2116842793=1; FSSBBIl1UgzbN7N80S=rSE4ZY4eEGNUDbJKn2Kn.MXUf5FU9Bnazz_tnfUvrIVFiCqA4iVYVmw5P2347Sd.;
 Using IP proxy: 122.236.166.99:56671
@@ -245,7 +245,7 @@ Process finished with exit code 0
 124.16.136.100估计是被封了，10次里有8次查不出来. 更换到其他网络（手机4G网络）速度很快
 
 20170618 23:10 Output:
-/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/Test/new_cjo_spider_test.py
+/home/lxw/IT/program/LXW_VIRTUALENV/py361scrapy133/bin/python /home/lxw/IT/projects/fintech_spider/MyTest/new_cjo_spider_test.py
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="X-UA-Compatible" content="IE=8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" /><title>
 	
         王某容留他人吸毒罪一审刑事判决书

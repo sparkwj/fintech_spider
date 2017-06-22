@@ -51,7 +51,6 @@ class CJODocIDSpider_New():
     裁判文书网改版后使用Selenium直接爬取doc_id案件详情信息
     """
     error_logger = generate_logger("new_cjodocid_error")
-    proxies = {}
     TIMEOUT = 120
     # headers = {"Host": "wenshu.court.gov.cn"}      # need Host, Referer, User-Agent. the latter two keys will be add below.
     url_prefix = "http://wenshu.court.gov.cn/content/content?DocID="
@@ -63,29 +62,38 @@ class CJODocIDSpider_New():
     redis_key = "DOC_ID_HASH"
 
     def get_chrome_driver(self):
-        options = webdriver.ChromeOptions()
-        proxy = get_proxy()
-        # proxy = "120.26.215.154:3128"
-        # NOTE: 这里"http"和"https"一定要都写，不能只写http或者是只写https
-        self.proxies["http"] = proxy
-        self.proxies["https"] = proxy
-        if proxy:
-            options.add_argument('--proxy-server=' + proxy)
-        else:
-            return None    # proxy is essential
+        display = None
+        driver = None
+        try:
+            options = webdriver.ChromeOptions()
+            proxy = get_proxy()
+            if proxy:
+                options.add_argument('--proxy-server=' + proxy)
+            else:
+                return None    # proxy is essential
+            display = Display(visible=0, size=(800, 800))
+            display.start()
+            driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
 
-        display = Display(visible=0, size=(800, 800))
-        display.start()
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
-        # 设置超时时间
-        driver.set_page_load_timeout(self.TIMEOUT)
-        driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
-        return driver
+            # 设置超时时间
+            driver.set_page_load_timeout(self.TIMEOUT)
+            driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
+        except Exception as e:
+            self.error_logger.error("lxw get_chrome_driver() Exception: {0}\n{1}\n\n".format(e, "--"*30))
+            if display:
+                display.stop()
+            if driver:
+                driver.quit()
+            return None, None
+        else:
+            return display, driver
 
     def test_proxy(self):
-        driver = self.get_chrome_driver()
+        display, driver = self.get_chrome_driver()
         driver.implicitly_wait(30)
         driver.get("http://xiujinniu.com/xiujinniu/index.php")
+        driver.quit()
+        display.stop()
 
     def get_doc_id_detail(self, doc_id):
         """
@@ -94,8 +102,9 @@ class CJODocIDSpider_New():
         """
         # print("in get_doc_id_detail().")
         driver = None
+        display = None
         try:
-            driver = self.get_chrome_driver()
+            display, driver = self.get_chrome_driver()
             if not driver:
                 return
             driver.implicitly_wait(60)
@@ -112,6 +121,8 @@ class CJODocIDSpider_New():
         finally:
             if driver:
                 driver.quit()
+            if display:
+                display.stop()
         """
         cookie_list = driver.get_cookies()
         cookie_str_list = []

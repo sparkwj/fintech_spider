@@ -104,26 +104,38 @@ class CJOSpider_New():
 
     def get_chrome_driver(self):
         # chromedriver
-        options = webdriver.ChromeOptions()
-        proxy = get_proxy()
-        if proxy:
-            options.add_argument('--proxy-server=' + proxy)
-        else:
-            return None    # proxy is essential
-        display = Display(visible=0, size=(800, 800))
-        display.start()
-        driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
+        display = None
+        driver = None
+        try:
+            options = webdriver.ChromeOptions()
+            proxy = get_proxy()
+            if proxy:
+                options.add_argument('--proxy-server=' + proxy)
+            else:
+                return None    # proxy is essential
+            display = Display(visible=0, size=(800, 800))
+            display.start()
+            driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver", chrome_options=options)
 
-        # 设置超时时间
-        driver.set_page_load_timeout(self.TIMEOUT)
-        driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
-        return driver
+            # 设置超时时间
+            driver.set_page_load_timeout(self.TIMEOUT)
+            driver.set_script_timeout(self.TIMEOUT)  # 这两种设置都进行才有效
+        except Exception as e:
+            self.error_logger.error("lxw get_chrome_driver() Exception: {0}\n{1}\n{2}\n\n".format(e, traceback.format_exc(), "--"*30))
+            if display:
+                display.stop()
+            if driver:
+                driver.quit()
+            return None, None
+        else:
+            return display, driver
 
     def get_cookie_by_selenium(self):
         # NOTE: 这儿的try...except...finally 是必须的，否则一旦这儿出错或者发生超时，都会导致浏览器窗口无法关闭（还得写crontab去定期杀掉defunct的chromium）
         driver = None
+        display = None
         try:
-            driver = self.get_chrome_driver()
+            display, driver = self.get_chrome_driver()
             if not driver:
                 return ""
             driver.implicitly_wait(60)
@@ -143,6 +155,8 @@ class CJOSpider_New():
         finally:
             if driver:
                 driver.quit()
+            if display:
+                display.stop()
 
     # def crawl_basic_info(self, cookie_str):
     def crawl_by_post(self, cookie_str, param, index):
@@ -187,10 +201,12 @@ class CJOSpider_New():
             return response.text
 
     def test_proxy(self):
-        driver = self.get_chrome_driver()
+        display, driver = self.get_chrome_driver()
         driver.implicitly_wait(30)
         driver.get("http://xiujinniu.com/xiujinniu/index.php")
         print(driver.page_source)
+        driver.quit()
+        display.stop()
 
     def process_response(self, text, data):
         """
