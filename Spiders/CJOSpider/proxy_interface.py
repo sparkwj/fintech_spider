@@ -103,7 +103,7 @@ class RedisClient():
 
     def clean_proxies(self):
         """
-        Test whether the proxies in Redis is usable, and remove the useless proxies.
+        MyTest whether the proxies in Redis is usable, and remove the useless proxies.
         """
         proxies = self._db.lrange(DB_NAME_PROXY, 0, -1)
         for proxy in proxies:

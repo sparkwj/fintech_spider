@@ -26,7 +26,7 @@ cmdline.execute("scrapy crawl CJOSpider -L WARNING".split())
 
 
 """
-# Test
+# MyTest
 cjospider = CJOSpider()
 # doc_id = "26286a27-bdad-4142-9479-da759996ae0f"   # 孙丽娜
 # doc_id = "62d93ccb-38ca-408e-9e8f-b6a588c55b1f"   # 证券虚假
