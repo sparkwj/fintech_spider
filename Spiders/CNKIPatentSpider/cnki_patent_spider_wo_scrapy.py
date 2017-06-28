@@ -30,6 +30,7 @@ class CNKIPatentSpider:
     要放到本地去解析, 不要直接解析. 直接把源码写入到文件中,而不是只存储解析之后的数据
     """
     error_logger = generate_logger("cnki_patent_error")
+    success_logger = generate_logger("cnki_patent_success")
     s = Session()
     headers = {
         "Host": "kns.cnki.net",
@@ -148,6 +149,7 @@ class CNKIPatentSpider:
         for key, value in cookie_dict.items():
             cookie_list.append("{0}={1};".format(key, value))
         cookie_str = " ".join(cookie_list)
+        print("Cookie:", cookie_str)
         return cookie_str
 
     def crawl(self, company_code, company_name, url, abbr_or_full):
@@ -238,13 +240,15 @@ class CNKIPatentSpider:
                         self.into_file(self.file_prefix + company_code + "/", page_no, content)
                     elif next_page_link == "no_result":
                         # 当前页没有查到专利数据, 无需写入文件(更没有下一页之说了)
-                        pass
+                        print("{0} has no patent data.".format(company_code))
+                        # pass
                     else:
                         self.into_file(self.file_prefix + company_code + "/", page_no, content)
                         next_quadruple = "{0}||{1}||+{2}||{3}".format(company_code, company_name, next_page_link, abbr_or_full)
                         self.redis_client.into_redis(next_quadruple, "0")    # next_quadruple入Redis
 
                     self.redis_client.into_redis(quadruple, "-1")  # 当前请求成功, 修改redis中的标志位
+                    self.success_logger.debug("Complete.\n{}\n\n".format("--"*30))
                 else:    # 详情页. startswith("-")
                     url = url[1:]   # /kns/detail/detail.aspx?QueryID=13&CurRec=1&dbcode=SCPD&dbname=SCPD2017&filename=CN106503084A
                     patent_no = self.get_patent_no(url)    # 看当前专利是在查询结果中的第几条
@@ -264,6 +268,7 @@ class CNKIPatentSpider:
                     content = resp.text.strip()
                     self.into_file(self.file_prefix + company_code + "/_", patent_no, content)      # 详情页的网页源码存储在以"_"开头的文件里
                     self.redis_client.into_redis(quadruple, "-1")  # 当前请求成功, 修改redis中的标志位
+                    self.success_logger.debug("Complete.\n{}\n\n".format("--"*30))
 
             except Exception as e:
                 self.error_logger.error("in crawl(). Exception: {0}\n{1}\n".format(e, "---"*20))
@@ -343,9 +348,10 @@ class CNKIPatentSpider:
         :return: None
         """
         if not os.path.exists(file_path):
-            os.mkdir(file_path)
+            os.makedirs(file_path)
         with open(file_path + filename + ".html", "w") as f:
             f.write(content)
+        self.success_logger.debug("in into_file(): Write file OK.\n{}\n\n".format("--"*30))
 
     def initialize_redis(self):
         """
