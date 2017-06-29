@@ -13,7 +13,8 @@ def get_driver_chrome():
     # chromedriver
     options = webdriver.ChromeOptions()
 
-    display = Display(visible=1, size=(800, 800))
+    # display = Display(visible=1, size=(800, 800))
+    display = Display(visible=0, size=(800, 800))
     display.start()
     driver = webdriver.Chrome(executable_path=r"/home/lxw/Software/chromedriver_selenium/chromedriver",
                               chrome_options=options)

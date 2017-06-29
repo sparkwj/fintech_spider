@@ -33,7 +33,7 @@ class CheckRedis:
                 timeout_count += 1
                 # print(doc_id, flag_code_timestamp)
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}, total: {3}".format(success_count, zero_count, timeout_count, success_count+zero_count+timeout_count))
-        # 20170628 success_count: 208797, zero_count: 837870, timeout_count: 115272, total: 1161939
+        # 20170629_1107 success_count: 213040, zero_count: 868118, timeout_count: 113378, total: 1194536
 
     def check_tasks_redis(self):
         success_count = 0
@@ -65,10 +65,10 @@ class CheckRedis:
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
         print("success_1_count: {0}, success_2_count: {1}, success_3_count: {2}".format(success_1_count, success_2_count, success_3_count))
         print("total:{}".format(zero_count+success_count+timeout_count))
-        # 20170628_1041
-        # success_count: 64024, zero_count: 22473, timeout_count: 4890
-        # success_1_count: 60667, success_2_count: 2916, success_3_count: 441
-        # total:91387
+        # 20170629_1107
+        # success_count: 66310, zero_count: 21420, timeout_count: 4544
+        # success_1_count: 62899, success_2_count: 2969, success_3_count: 442
+        # total:92274
 
     def check_cnki_redis(self):
         success_count = 0
@@ -86,7 +86,7 @@ class CheckRedis:
                 error_count += 1
                 print("[error] url:", url)
         print("\n\nsuccess_count: {0}, zero_count: {1}, error_count: {2}".format(success_count, zero_count, error_count))
-        # 20170628_1030 success_count: 143965, zero_count: 7808, error_count: 0
+        # 20170629_1107 success_count: 148536, zero_count: 3237, error_count: 0
 
     def check_tasks(self):
         with open("./result.md", "w") as f:
@@ -102,8 +102,8 @@ class CheckRedis:
 
 if __name__ == "__main__":
     cr = CheckRedis()
-    # cr.check_doc_id_redis()
-    # cr.check_tasks_redis()
+    cr.check_doc_id_redis()
+    cr.check_tasks_redis()
     cr.check_cnki_redis()
     # cr.check_tasks()
 
