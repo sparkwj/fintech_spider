@@ -378,6 +378,15 @@ class CNKIPatentSpider:
                 field = "{0}||{1}||+||full".format(code, full)
                 self.redis_client.into_redis(field, "0")
 
+        code = 601398
+        name = "中国工商银行"
+        redis_field_str = "{0}||{1}||+||abbr".format(code, name)
+        self.redis_client.into_redis(redis_field_str, "0")
+
+        name = "中国工商银行股份有限公司"
+        redis_field_str = "{0}||{1}||+||full".format(code, name)
+        self.redis_client.into_redis(redis_field_str, "0")
+
     def operate(self):
         count = 0
         continue_flag = True
@@ -407,8 +416,8 @@ class CNKIPatentSpider:
 
 if __name__ == "__main__":
     spider = CNKIPatentSpider()
-    # spider.initialize_redis()
-    spider.operate()
+    spider.initialize_redis()
+    # spider.operate()
 
     # spider.get_cookie_by_selenium()
     # spider.get_cookie_by_requests()

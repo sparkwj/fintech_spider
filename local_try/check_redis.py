@@ -78,7 +78,7 @@ class CheckRedis:
         for item in self.REDIS_URI.hscan_iter(self.REDIS_KEY_CNKI):
             # print(type(item), item)   # <class 'tuple'> (b'600469||\xe9\xa3\x8e\xe7\xa5\x9e\xe8\xbd\xae\xe8\x83\x8e\xe8\x82\xa1\xe4\xbb\xbd\xe6\x9c\x89\xe9\x99\x90\xe5\x85\xac\xe5\x8f\xb8||-/kns/detail/detail.aspx?QueryID=0&CurRec=387&dbcode=scpd&dbname=SCPD0407&filename=CN3639826||full', b'-1')
             # print(type(item), item)   # <class 'tuple'> (b'600469||\xe9\xa3\x8e\xe7\xa5\x9e\xe8\xbd\xae\xe8\x83\x8e\xe8\x82\xa1\xe4\xbb\xbd\xe6\x9c\x89\xe9\x99\x90\xe5\x85\xac\xe5\x8f\xb8||-/kns/detail/detail.aspx?QueryID=0&CurRec=387&dbcode=scpd&dbname=SCPD0407&filename=CN3639826||full', b'-1')
-            if item[0].decode("utf-8").startswith("601398"):
+            if item[0].decode("utf-8").startswith("900951"):
                 print(item)
                 # print(item[0].decode("utf-8").split("||")[1])
                 # self.REDIS_URI.hset(self.REDIS_KEY_CNKI, item[0], 0)  # 601398
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     cr = CheckRedis()
     # cr.check_doc_id_redis()
     # cr.check_tasks_redis()
-    cr.add_new_into_cnki_redis()
+    # cr.add_new_into_cnki_redis()
     cr.check_cnki_redis()
     # cr.check_tasks()
 
