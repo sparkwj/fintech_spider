@@ -33,7 +33,8 @@ class CheckRedis:
                 timeout_count += 1
                 # print(doc_id, flag_code_timestamp)
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}, total: {3}".format(success_count, zero_count, timeout_count, success_count+zero_count+timeout_count))
-        # 20170629_1107 success_count: 213040, zero_count: 868118, timeout_count: 113378, total: 1194536
+        # 20170630_0855 success_count: 217798, zero_count: 906276, timeout_count: 111403, total: 1235477
+
 
     def check_tasks_redis(self):
         success_count = 0
@@ -65,10 +66,10 @@ class CheckRedis:
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
         print("success_1_count: {0}, success_2_count: {1}, success_3_count: {2}".format(success_1_count, success_2_count, success_3_count))
         print("total:{}".format(zero_count+success_count+timeout_count))
-        # 20170629_1107
-        # success_count: 66310, zero_count: 21420, timeout_count: 4544
-        # success_1_count: 62899, success_2_count: 2969, success_3_count: 442
-        # total:92274
+        # 20170630_0855
+        # success_count: 68184, zero_count: 22265, timeout_count: 3863
+        # success_1_count: 64718, success_2_count: 3016, success_3_count: 450
+        # total:94312
 
     def check_cnki_redis(self):
         success_count = 0
@@ -76,6 +77,11 @@ class CheckRedis:
         error_count = 0
         for item in self.REDIS_URI.hscan_iter(self.REDIS_KEY_CNKI):
             # print(type(item), item)   # <class 'tuple'> (b'600469||\xe9\xa3\x8e\xe7\xa5\x9e\xe8\xbd\xae\xe8\x83\x8e\xe8\x82\xa1\xe4\xbb\xbd\xe6\x9c\x89\xe9\x99\x90\xe5\x85\xac\xe5\x8f\xb8||-/kns/detail/detail.aspx?QueryID=0&CurRec=387&dbcode=scpd&dbname=SCPD0407&filename=CN3639826||full', b'-1')
+            # print(type(item), item)   # <class 'tuple'> (b'600469||\xe9\xa3\x8e\xe7\xa5\x9e\xe8\xbd\xae\xe8\x83\x8e\xe8\x82\xa1\xe4\xbb\xbd\xe6\x9c\x89\xe9\x99\x90\xe5\x85\xac\xe5\x8f\xb8||-/kns/detail/detail.aspx?QueryID=0&CurRec=387&dbcode=scpd&dbname=SCPD0407&filename=CN3639826||full', b'-1')
+            if item[0].decode("utf-8").startswith("601398"):
+                print(item)
+                # print(item[0].decode("utf-8").split("||")[1])
+                # self.REDIS_URI.hset(self.REDIS_KEY_CNKI, item[0], 0)  # 601398
             url = item[0].decode("utf-8")
             flag_code = int(item[1].decode("utf-8"))
             if flag_code == -1:
@@ -87,6 +93,17 @@ class CheckRedis:
                 print("[error] url:", url)
         print("\n\nsuccess_count: {0}, zero_count: {1}, error_count: {2}".format(success_count, zero_count, error_count))
         # 20170629_1107 success_count: 148536, zero_count: 3237, error_count: 0
+        # 20170630_0855 success_count: 151823, zero_count: 0, error_count: 0
+
+    def add_new_into_cnki_redis(self):
+        code = 601398
+        name = "中国工商银行"
+        redis_field_str = "{0}||{1}||+||abbr".format(code, name)
+        self.REDIS_URI.hset(self.REDIS_KEY_CNKI, redis_field_str, 0)
+
+        name = "中国工商银行股份有限公司"
+        redis_field_str = "{0}||{1}||+||abbr".format(code, name)
+        self.REDIS_URI.hset(self.REDIS_KEY_CNKI, redis_field_str, 0)
 
     def check_tasks(self):
         with open("./result.md", "w") as f:
@@ -102,8 +119,9 @@ class CheckRedis:
 
 if __name__ == "__main__":
     cr = CheckRedis()
-    cr.check_doc_id_redis()
-    cr.check_tasks_redis()
+    # cr.check_doc_id_redis()
+    # cr.check_tasks_redis()
+    cr.add_new_into_cnki_redis()
     cr.check_cnki_redis()
     # cr.check_tasks()
 
