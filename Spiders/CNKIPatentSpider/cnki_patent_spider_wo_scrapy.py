@@ -416,8 +416,8 @@ class CNKIPatentSpider:
 
 if __name__ == "__main__":
     spider = CNKIPatentSpider()
-    spider.initialize_redis()
-    # spider.operate()
+    # spider.initialize_redis()
+    spider.operate()
 
     # spider.get_cookie_by_selenium()
     # spider.get_cookie_by_requests()
