@@ -34,6 +34,7 @@ class CheckRedis:
                 # print(doc_id, flag_code_timestamp)
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}, total: {3}".format(success_count, zero_count, timeout_count, success_count+zero_count+timeout_count))
         # 20170630_0855 success_count: 217798, zero_count: 906276, timeout_count: 111403, total: 1235477
+        # 20170703_1500 success_count: 232367, zero_count: 1001587, timeout_count: 105284, total: 133923
 
 
     def check_tasks_redis(self):
@@ -70,6 +71,10 @@ class CheckRedis:
         # success_count: 68184, zero_count: 22265, timeout_count: 3863
         # success_1_count: 64718, success_2_count: 3016, success_3_count: 450
         # total:94312
+        # 20170703_1500
+        # success_count: 75240, zero_count: 22419, timeout_count: 2120
+        # success_1_count: 71592, success_2_count: 3179, success_3_count: 469
+        # total:99779
 
     def check_cnki_redis(self):
         success_count = 0
@@ -119,8 +124,8 @@ class CheckRedis:
 
 if __name__ == "__main__":
     cr = CheckRedis()
-    # cr.check_doc_id_redis()
-    # cr.check_tasks_redis()
+    cr.check_doc_id_redis()
+    cr.check_tasks_redis()
     # cr.add_new_into_cnki_redis()
     cr.check_cnki_redis()
     # cr.check_tasks()
