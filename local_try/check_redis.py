@@ -67,14 +67,10 @@ class CheckRedis:
         print("\n\nsuccess_count: {0}, zero_count: {1}, timeout_count: {2}".format(success_count, zero_count, timeout_count))
         print("success_1_count: {0}, success_2_count: {1}, success_3_count: {2}".format(success_1_count, success_2_count, success_3_count))
         print("total:{}".format(zero_count+success_count+timeout_count))
-        # 20170630_0855
-        # success_count: 68184, zero_count: 22265, timeout_count: 3863
-        # success_1_count: 64718, success_2_count: 3016, success_3_count: 450
-        # total:94312
-        # 20170703_1500
-        # success_count: 75240, zero_count: 22419, timeout_count: 2120
-        # success_1_count: 71592, success_2_count: 3179, success_3_count: 469
-        # total:99779
+        # 20170704_0900
+        # success_count: 76521, zero_count: 22581, timeout_count: 1591
+        # success_1_count: 72837, success_2_count: 3212, success_3_count: 472
+        # total: 100693
 
     def check_cnki_redis(self):
         success_count = 0
