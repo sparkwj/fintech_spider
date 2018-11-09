@@ -29,7 +29,6 @@ _Only important dirs & files are listed here._
 | Spiders/CNKI_Patent_Spider/ | [lxw](https://github.com/lxw0109) | (w/o scrapy)Spiders for crawling patent data from [中国知网](http://cnki.net/) |
 | Spiders/NECIPSSpider/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data from [国家企业信用信息公示系统](http://www.gsxt.gov.cn/corp-query-homepage.html)(National Enterprise Credit Information Publicity System) |
 | Spiders/new_three_board/ | [lxw](https://github.com/lxw0109) | (w/ scrapy)Spiders for crawling data from [全国中小企业股份转让系统](http://www.neeq.com.cn/nq/listedcompany.html) |
-| Spiders/SBJSpider/ | [hee](https://github.com/hee0624) |  |
 | Spiders/TYCSpider/ | [lxw](https://github.com/lxw0109) | (w scrapy, PhantomJS)Spiders for crawling patent/copyright data from [天眼查](http://www.tianyancha.com/) |
 
 
