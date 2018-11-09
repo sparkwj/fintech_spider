@@ -13,12 +13,12 @@ _Only important dirs & files are listed here._
 |------|:------:|------|
 | **README.md** | [lxw](https://github.com/lxw0109) | The document for this project |
 | | |
-| **Anti_Anti_Spider/** | [hee](https://github.com/hee0624) |  |
+| **Anti_Anti_Spider/** | [hee](https://github.com/hee0624) | 验证码识别（滑块验证码/字符验证码） |
 | | |
 | **Demo/** |  | Some Demonstrations(e.g. PhantomJS/Proxies, etc.) |
-| Demo/ArticleSpider/ | [hee](https://github.com/hee0624) |  |
+| Demo/ArticleSpider/ | [hee](https://github.com/hee0624) | A demo for Scrapy spider project about lagou,zhihu,jobbol|
 | Demo/CNKI_Patent/ | [lxw](https://github.com/lxw0109) | A demo for Scrapy spiders project which supports Selenium/PhantomJS/User-Agent/IP-Proxy |
-| Demo/geetestcrack.py | [hee](https://github.com/hee0624) |  |
+| Demo/geetestcrack.py | [hee](https://github.com/hee0624) | 滑块验证码识别 |
 | Demo/phantomjs_proxy.py | [lxw](https://github.com/lxw0109) | Add IP proxy in PhantomJS |
 | Demo/user_agent.txt | [hee](https://github.com/hee0624) | A large number of User-Agents |
 | | |
